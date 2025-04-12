@@ -8,15 +8,170 @@ from PIL import Image
 import random
 import uuid
 
-# ===== CONFIGURATION =====
-st.set_page_config(
-    page_title="Atmosphere",
-    page_icon="🌍",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+# ===== CSS STYLING SECTION =====
+def load_css():
+    """Define all CSS styling for the application"""
+    st.markdown(f"""
+    <style>
+    /* Color Variables */
+    :root {{
+        --primary: #4361ee;
+        --secondary: #3f37c9;
+        --accent: #4895ef;
+        --light: #f8f9fa;
+        --dark: #212529;
+        --success: #4cc9f0;
+        --warning: #f72585;
+        --danger: #7209b7;
+    }}
+    
+    /* Base Styles */
+    body {{
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+        color: var(--dark);
+    }}
+    
+    /* Main Containers */
+    .main-container {{
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }}
+    
+    /* Cards */
+    .card {{
+        border-radius: 12px;
+        box-shadow: 0 4px 8px 0 rgba(0,0,0,0.1);
+        padding: 20px;
+        margin-bottom: 25px;
+        background-color: white;
+        transition: transform 0.3s, box-shadow 0.3s;
+        border: 1px solid #e9ecef;
+    }}
+    .card:hover {{
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px 0 rgba(0,0,0,0.15);
+    }}
+    .card-title {{
+        color: var(--primary);
+        margin-bottom: 15px;
+        font-size: 1.2rem;
+    }}
+    
+    /* Buttons */
+    .stButton>button {{
+        border-radius: 8px;
+        padding: 8px 16px;
+        background-color: var(--primary);
+        color: white;
+        border: none;
+        transition: background-color 0.3s;
+    }}
+    .stButton>button:hover {{
+        background-color: var(--secondary);
+    }}
+    
+    /* Forms */
+    .stTextInput>div>div>input, 
+    .stTextArea>div>textarea {{
+        border-radius: 8px;
+        border: 1px solid #ced4da;
+    }}
+    .stSelectbox>div>div>div {{
+        border-radius: 8px;
+    }}
+    
+    /* Navigation */
+    .sidebar .sidebar-content {{
+        background-color: var(--light);
+        padding: 15px;
+    }}
+    .sidebar .sidebar-content .block-container {{
+        padding-top: 0;
+    }}
+    
+    /* Hero Section */
+    .hero-container {{
+        position: relative;
+        text-align: center;
+        margin-bottom: 30px;
+    }}
+    .hero-text {{
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }}
+    .hero-title {{
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+    }}
+    
+    /* Activity Feed Items */
+    .activity-item {{
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        border-left: 4px solid var(--accent);
+    }}
+    .activity-time {{
+        color: #6c757d;
+        font-size: 0.8rem;
+    }}
+    
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {{
+        .hero-title {{
+            font-size: 1.8rem;
+        }}
+        .card {{
+            margin-bottom: 15px;
+        }}
+    }}
+    </style>
+    """, unsafe_allow_html=True)
 
-# ===== DATABASE STRUCTURES =====
+# ===== HTML COMPONENTS SECTION =====
+def card(title, content, image=None, action_button=None):
+    """Reusable card component with optional image and action button"""
+    img_html = f'<img src="{image}" style="width:100%; border-radius:8px; margin-bottom:15px;">' if image else ''
+    button_html = f'<button class="card-button">{action_button}</button>' if action_button else ''
+    
+    st.markdown(f"""
+    <div class="card">
+        <div class="card-title">{title}</div>
+        {img_html}
+        <div class="card-content">{content}</div>
+        {button_html}
+    </div>
+    """, unsafe_allow_html=True)
+
+def hero_section(title, subtitle, image_url):
+    """Hero banner component with title and subtitle"""
+    st.markdown(f"""
+    <div class="hero-container">
+        <img src="{image_url}" style="width:100%; border-radius:8px;">
+        <div class="hero-text">
+            <h1 class="hero-title">{title}</h1>
+            <p>{subtitle}</p>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+def activity_item(user, action, time_ago):
+    """Activity feed item component"""
+    st.markdown(f"""
+    <div class="activity-item">
+        <strong>{user}</strong> {action}
+        <div class="activity-time">{time_ago}</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+# ===== DATABASE CONFIGURATION =====
 DB_STRUCTURE = {
     "users": {
         "sample_user": {
@@ -28,7 +183,8 @@ DB_STRUCTURE = {
             "verified": True,
             "joined_date": "2023-01-01",
             "interests": ["music", "tech"],
-            "location": {"city": "New York", "lat": 40.7128, "lng": -74.0060}
+            "location": {"city": "New York", "lat": 40.7128, "lng": -74.0060},
+            "profile_pic": "https://randomuser.me/api/portraits/men/1.jpg"
         }
     },
     "businesses": {
@@ -64,7 +220,8 @@ DB_STRUCTURE = {
             "location": {"city": "New York", "lat": 40.7128, "lng": -74.0060},
             "members": ["usr_123"],
             "events": ["evt_123"],
-            "business_owned": False
+            "business_owned": False,
+            "created_at": "2023-01-01T10:00:00"
         }
     },
     "events": {
@@ -79,7 +236,8 @@ DB_STRUCTURE = {
             "organizer": "usr_123",
             "attendees": ["usr_123"],
             "capacity": 20,
-            "tags": ["photography", "outdoors"]
+            "tags": ["photography", "outdoors"],
+            "created_at": "2023-05-01T09:00:00"
         }
     },
     "promotions": {
@@ -90,7 +248,8 @@ DB_STRUCTURE = {
             "requirements": "Post 3 photos with #CoolCafe",
             "start_date": "2023-01-01",
             "end_date": "2023-01-31",
-            "claimed_by": ["usr_123"]
+            "claimed_by": ["usr_123"],
+            "created_at": "2022-12-15T10:00:00"
         }
     },
     "notifications": {
@@ -118,7 +277,6 @@ DB_STRUCTURE = {
     ]
 }
 
-# ===== FILE PATHS =====
 DB_FILES = {
     "users": "data/users.json",
     "businesses": "data/businesses.json",
@@ -138,14 +296,21 @@ os.makedirs(MEDIA_DIR, exist_ok=True)
 def init_db():
     """Initialize database files with empty structures"""
     for file, structure in DB_FILES.items():
-        if not os.path.exists(structure):
-            with open(structure, "w") as f:
-                json.dump({} if file in ["users", "businesses", "circles", "notifications"] else [], f)
+        if not os.path.exists(file):
+            with open(file, "w") as f:
+                if file in ["users", "businesses", "circles", "notifications"]:
+                    json.dump({}, f)
+                else:
+                    json.dump([], f)
 
 def load_db(file_key):
     """Load database file"""
-    with open(DB_FILES[file_key], "r") as f:
-        return json.load(f)
+    try:
+        with open(DB_FILES[file_key], "r") as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        init_db()
+        return load_db(file_key)
 
 def save_db(file_key, data):
     """Save database file"""
@@ -178,18 +343,32 @@ def add_notification(user_id, notification_type, content, related_id=None):
     })
     save_db("notifications", notifications)
 
-# ===== INITIALIZE DATABASES =====
-init_db()
+def get_user_media(user_id):
+    """Get all media for a specific user"""
+    media = load_db("media")
+    return [m for m in media if m["user_id"] == user_id]
 
-# ===== AUTHENTICATION =====
-def login():
-    st.title("🔑 Login to Atmosphere")
+def get_user_circles(user_id):
+    """Get all circles a user belongs to"""
+    circles = load_db("circles")
+    return [c for c in circles.values() if user_id in c["members"]]
+
+def get_circle_events(circle_id):
+    """Get all events for a specific circle"""
+    events = load_db("events")
+    return [e for e in events.values() if e["circle_id"] == circle_id]
+
+# ===== AUTHENTICATION PAGES =====
+def login_page():
+    """Login page with form and welcome content"""
+    st.title("🔑 Welcome Back to Atmosphere")
+    
     col1, col2 = st.columns([1, 2])
     
     with col1:
         with st.form("login_form"):
-            username = st.text_input("Username")
-            password = st.text_input("Password", type="password")
+            username = st.text_input("Username", key="login_username")
+            password = st.text_input("Password", type="password", key="login_password")
             login_btn = st.form_submit_button("Login")
             
             if login_btn:
@@ -205,22 +384,31 @@ def login():
                     st.error("Invalid username or password")
 
     with col2:
-        st.image("https://via.placeholder.com/500x300?text=Atmosphere+Community", use_container_width=True)
+        st.image("https://images.unsplash.com/photo-1531058020387-3be344556be6", 
+                use_container_width=True, 
+                caption="Join our community")
         st.markdown("""
-        **New to Atmosphere?**
-        - Connect with like-minded people
-        - Share your experiences
-        - Discover local events
-        - Grow your business
-        """)
+        <div style="padding:20px;">
+            <h3>New to Atmosphere?</h3>
+            <ul style="list-style-type:none; padding-left:0;">
+                <li>🌍 Connect with like-minded people</li>
+                <li>📸 Share your experiences</li>
+                <li>🎉 Discover local events</li>
+                <li>💼 Grow your business</li>
+            </ul>
+            <p>Don't have an account? <a href="#sign-up" onclick="window.location.hash='sign-up'">Sign up now</a></p>
+        </div>
+        """, unsafe_allow_html=True)
 
-def signup():
-    st.title("🆕 Join Atmosphere")
-    tab1, tab2 = st.tabs(["General User", "Business Account"])
+def signup_page():
+    """Signup page with tabs for different account types"""
+    st.title("🆕 Join Our Community")
+    
+    tab1, tab2 = st.tabs(["👤 General User", "💼 Business Account"])
     
     with tab1:
         with st.form("general_signup"):
-            st.subheader("General User Account")
+            st.subheader("Create Personal Account")
             full_name = st.text_input("Full Name")
             username = st.text_input("Username")
             email = st.text_input("Email")
@@ -249,7 +437,8 @@ def signup():
                             "verified": False,
                             "joined_date": datetime.now().isoformat(),
                             "interests": interests,
-                            "location": {"city": location}
+                            "location": {"city": location},
+                            "profile_pic": f"https://randomuser.me/api/portraits/{random.choice(['men','women'])}/{random.randint(1,100)}.jpg"
                         }
                         save_db("users", users)
                         st.session_state["user"] = users[username]
@@ -260,7 +449,7 @@ def signup():
 
     with tab2:
         with st.form("business_signup"):
-            st.subheader("Business Account")
+            st.subheader("Register Your Business")
             business_name = st.text_input("Business Name")
             owner_name = st.text_input("Owner/Representative Name")
             username = st.text_input("Username")
@@ -291,24 +480,26 @@ def signup():
                             "password": hash_password(password),
                             "account_type": "business",
                             "verified": False,
-                            "joined_date": datetime.now().isoformat()
+                            "joined_date": datetime.now().isoformat(),
+                            "profile_pic": f"https://randomuser.me/api/portraits/{random.choice(['men','women'])}/{random.randint(1,100)}.jpg"
                         }
                         
                         # Create business profile
                         business_id = generate_id("biz")
-                        businesses[business_name] = {
+                        businesses[business_id] = {
                             "business_id": business_id,
                             "owner_id": user_id,
                             "business_name": business_name,
                             "category": category,
                             "verified": False,
-                            "locations": [{"address": address}]
+                            "locations": [{"address": address}],
+                            "created_at": datetime.now().isoformat()
                         }
                         
                         save_db("users", users)
                         save_db("businesses", businesses)
                         st.session_state["user"] = users[username]
-                        st.session_state["business"] = businesses[business_name]
+                        st.session_state["business"] = businesses[business_id]
                         st.session_state["logged_in"] = True
                         st.success("Business account created! Verification pending.")
                         time.sleep(1)
@@ -316,67 +507,60 @@ def signup():
 
 # ===== MAIN APP PAGES =====
 def home_page():
-    st.title(f"🌍 Welcome to Atmosphere, {st.session_state['user']['full_name']}")
+    """Home page with user dashboard"""
+    hero_section(
+        f"Welcome, {st.session_state['user']['full_name']}", 
+        "What would you like to do today?",
+        "https://images.unsplash.com/photo-1469474968028-56623f02e42e"
+    )
     
     # User stats
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.metric("Circles Joined", "5")
+        card("Circles Joined", str(len(get_user_circles(st.session_state["user"]["user_id"])))
     with col2:
-        st.metric("Events Attended", "3")
+        user_events = sum(len(get_circle_events(c["circle_id"])) for c in get_user_circles(st.session_state["user"]["user_id"]))
+        card("Events Available", str(user_events))
     with col3:
-        st.metric("Media Shared", "12")
+        card("Media Shared", str(len(get_user_media(st.session_state["user"]["user_id"]))))
     
     # Activity feed
     st.subheader("📰 Your Activity Feed")
     tab1, tab2, tab3 = st.tabs(["Recent Activity", "Your Circles", "Upcoming Events"])
     
     with tab1:
-        st.write("Recent posts from your circles")
-        # Sample activity data
         activities = [
             {"user": "JaneDoe", "action": "posted a photo in NYC Photographers", "time": "2h ago"},
             {"user": "MikeT", "action": "created an event: Central Park Picnic", "time": "5h ago"},
             {"user": "CoffeeShop", "action": "offered 20% off for photos", "time": "1d ago"}
         ]
         for activity in activities:
-            st.markdown(f"""
-            <div style="background:#f0f2f6;padding:10px;border-radius:10px;margin:5px 0;">
-                <strong>{activity['user']}</strong> {activity['action']}
-                <div style="color:gray;font-size:0.8em;">{activity['time']}</div>
-            </div>
-            """, unsafe_allow_html=True)
+            activity_item(activity["user"], activity["action"], activity["time"])
     
     with tab2:
-        circles = [
-            {"name": "NYC Photographers", "members": 45, "new_posts": 3},
-            {"name": "Food Lovers", "members": 120, "new_posts": 7},
-            {"name": "Tech Enthusiasts", "members": 89, "new_posts": 2}
-        ]
-        for circle in circles:
-            st.markdown(f"""
-            <div style="background:#f0f2f6;padding:10px;border-radius:10px;margin:5px 0;">
-                <strong>{circle['name']}</strong>
-                <div>👥 {circle['members']} members | ✉️ {circle['new_posts']} new posts</div>
-            </div>
-            """, unsafe_allow_html=True)
+        circles = get_user_circles(st.session_state["user"]["user_id"])
+        for circle in circles[:3]:  # Show first 3 circles
+            card(
+                circle["name"],
+                f"Members: {len(circle['members']}\nType: {circle['type'].capitalize()}",
+                action_button="View Circle"
+            )
     
     with tab3:
-        events = [
-            {"name": "Sunset Photography", "date": "Jun 15", "location": "Brooklyn Bridge"},
-            {"name": "Food Festival", "date": "Jun 20", "location": "Downtown"},
-            {"name": "Tech Meetup", "date": "Jul 2", "location": "Innovation Center"}
-        ]
-        for event in events:
-            st.markdown(f"""
-            <div style="background:#f0f2f6;padding:10px;border-radius:10px;margin:5px 0;">
-                <strong>{event['name']}</strong>
-                <div>📅 {event['date']} | 📍 {event['location']}</div>
-            </div>
-            """, unsafe_allow_html=True)
+        events = []
+        for circle in get_user_circles(st.session_state["user"]["user_id"]):
+            events.extend(get_circle_events(circle["circle_id"]))
+        
+        for event in sorted(events, key=lambda x: x["date"])[:3]:  # Show next 3 events
+            card(
+                event["name"],
+                f"📅 {event['date']} at {event['time']}\n📍 {event['location']['name']}",
+                action_button="RSVP"
+            )
 
 def explore_page():
-    st.title("🔍 Explore")
+    """Explore page to discover content"""
+    st.title("🔍 Explore Our Community")
     
     # Search functionality
     search_col, filter_col = st.columns([3, 1])
@@ -387,57 +571,52 @@ def explore_page():
     
     # Map view
     st.subheader("📍 Nearby Locations")
-    st.image("https://maps.googleapis.com/maps/api/staticmap?center=40.7128,-74.0060&zoom=12&size=800x300&key=YOUR_API_KEY", 
-             use_container_width=True, caption="Map of nearby locations with Atmosphere activity")
+    st.image("https://maps.googleapis.com/maps/api/staticmap?center=40.7128,-74.0060&zoom=12&size=800x300&markers=color:red%7C40.7128,-74.0060&key=YOUR_API_KEY", 
+             use_container_width=True, 
+             caption="Map of nearby locations with Atmosphere activity")
     
     # Popular circles
     st.subheader("👥 Popular Circles")
-    circles = [
-        {"name": "NYC Photographers", "members": 245, "description": "For photography enthusiasts in NYC"},
-        {"name": "Food Lovers", "members": 320, "description": "Discover and share great food spots"},
-        {"name": "Tech Enthusiasts", "members": 189, "description": "Discuss the latest in technology"}
-    ]
-    for circle in circles:
-        with st.expander(f"{circle['name']} ({circle['members']} members)"):
-            st.write(circle['description'])
-            if st.button("Join Circle", key=f"join_{circle['name']}"):
-                st.success(f"You've joined {circle['name']}!")
+    circles = load_db("circles")
+    for circle_id, circle in list(circles.items())[:3]:  # Show 3 sample circles
+        card(
+            circle["name"],
+            circle["description"],
+            action_button="Join Circle"
+        )
     
     # Upcoming events
     st.subheader("📅 Upcoming Events")
-    events = [
-        {"name": "Central Park Picnic", "date": "Jun 15", "location": "Central Park", "circle": "NYC Photographers"},
-        {"name": "Food Festival", "date": "Jun 20", "location": "Downtown", "circle": "Food Lovers"},
-        {"name": "Tech Conference", "date": "Jul 2", "location": "Innovation Center", "circle": "Tech Enthusiasts"}
-    ]
-    for event in events:
-        st.markdown(f"""
-        <div style="background:#f0f2f6;padding:10px;border-radius:10px;margin:5px 0;">
-            <strong>{event['name']}</strong>
-            <div>📅 {event['date']} | 👥 {event['circle']}</div>
-        </div>
-        """, unsafe_allow_html=True)
+    events = load_db("events")
+    for event_id, event in list(events.items())[:3]:  # Show 3 sample events
+        card(
+            event["name"],
+            f"📅 {event['date']} at {event['time']}\n📍 {event['location']['name']}",
+            action_button="View Details"
+        )
 
 def media_page():
-    st.title("📸 Capture & Share")
+    """Media upload and gallery page"""
+    st.title("📸 Capture & Share Your Moments")
     
-    tab1, tab2 = st.tabs(["Upload Media", "Your Gallery"])
+    tab1, tab2 = st.tabs(["📤 Upload Media", "🖼️ Your Gallery"])
     
     with tab1:
-        st.subheader("Upload New Media")
+        st.subheader("Share Your Experience")
         
         # Camera capture
-        captured_photo = st.camera_input("Take a photo")
+        captured_photo = st.camera_input("Take a photo or upload one below")
         
         # Location selection
         location = st.text_input("Location", "Central Park, NYC")
         
         # Circle selection
-        circles = ["NYC Photographers", "Food Lovers", "Tech Enthusiasts"]
-        selected_circle = st.selectbox("Share to Circle (optional)", [""] + circles)
+        user_circles = get_user_circles(st.session_state["user"]["user_id"])
+        circle_options = [""] + [c["name"] for c in user_circles]
+        selected_circle = st.selectbox("Share to Circle (optional)", circle_options)
         
         # Tags
-        tags = st.multiselect("Tags", ["Nature", "Food", "Tech", "Art", "Sports"])
+        tags = st.multiselect("Tags", ["Nature", "Food", "Tech", "Art", "Sports", "Travel"])
         
         if st.button("Upload Media") and captured_photo:
             # Save media
@@ -456,7 +635,7 @@ def media_page():
                 "file_path": filepath,
                 "location": {"name": location},
                 "timestamp": datetime.now().isoformat(),
-                "circle_id": selected_circle if selected_circle else None,
+                "circle_id": next((c["circle_id"] for c in user_circles if c["name"] == selected_circle), 
                 "tags": tags,
                 "reports": []
             })
@@ -468,64 +647,78 @@ def media_page():
             promotions = load_db("promotions")
             for promo_id, promo in promotions.items():
                 if any(tag.lower() in [t.lower() for t in tags] for tag in promo.get("tags", [])):
-                    add_notification(st.session_state["user"]["user_id"], "promotion", 
-                                    f"Your photo qualifies for {promo['offer']} from {promo_id}!")
+                    add_notification(
+                        st.session_state["user"]["user_id"], 
+                        "promotion", 
+                        f"Your photo qualifies for {promo['offer']} from {promo['business_id']}!"
+                    )
     
     with tab2:
-        st.subheader("Your Media Gallery")
-        # Display user's media
-        media = load_db("media")
-        user_media = [m for m in media if m["user_id"] == st.session_state["user"]["user_id"]]
+        st.subheader("Your Shared Memories")
+        user_media = get_user_media(st.session_state["user"]["user_id"])
         
         if not user_media:
-            st.info("You haven't uploaded any media yet.")
+            st.info("You haven't uploaded any media yet. Capture your first moment!")
         else:
             cols = st.columns(3)
             for i, item in enumerate(user_media):
                 with cols[i % 3]:
-                    st.image(item["file_path"], use_container_width=True)
-                    st.caption(f"{item['location']['name']} • {datetime.fromisoformat(item['timestamp']).strftime('%b %d, %Y')}")
-                    st.write(f"Tags: {', '.join(item['tags'])}")
+                    try:
+                        st.image(
+                            item["file_path"], 
+                            use_container_width=True,
+                            caption=f"{item['location']['name']} • {datetime.fromisoformat(item['timestamp']).strftime('%b %d, %Y')}"
+                        )
+                        st.write(f"Tags: {', '.join(item['tags'])}")
+                    except:
+                        st.warning("Could not load this media file")
 
 def circles_page():
-    st.title("👥 Circles")
+    """Circles management page"""
+    st.title("👥 Your Circles")
     
-    tab1, tab2, tab3 = st.tabs(["Your Circles", "Discover", "Create Circle"])
+    tab1, tab2, tab3 = st.tabs(["Your Circles", "Discover", "Create"])
     
     with tab1:
-        st.subheader("Your Circles")
-        # Sample data - in real app would load from DB
-        user_circles = [
-            {"name": "NYC Photographers", "members": 45, "unread": 3},
-            {"name": "Food Lovers", "members": 120, "unread": 7}
-        ]
+        st.subheader("Your Communities")
+        user_circles = get_user_circles(st.session_state["user"]["user_id"])
         
-        for circle in user_circles:
-            with st.expander(f"{circle['name']} ({circle['members']} members) - {circle['unread']} new posts"):
-                # Circle chat/feed would go here
-                st.write("Recent posts from this circle...")
-                if st.button("View Circle", key=f"view_{circle['name']}"):
-                    st.session_state["current_circle"] = circle['name']
-                    st.experimental_rerun()
+        if not user_circles:
+            st.info("You haven't joined any circles yet. Explore some below!")
+        else:
+            for circle in user_circles:
+                with st.expander(f"{circle['name']} ({len(circle['members'])} members)"):
+                    st.write(circle["description"])
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        if st.button("View Posts", key=f"posts_{circle['circle_id']}"):
+                            st.session_state["current_circle"] = circle['circle_id']
+                            st.experimental_rerun()
+                    with col2:
+                        if st.button("Leave Circle", key=f"leave_{circle['circle_id']}"):
+                            circles = load_db("circles")
+                            circles[circle["circle_id"]]["members"].remove(st.session_state["user"]["user_id"])
+                            save_db("circles", circles)
+                            st.success(f"You left {circle['name']}")
+                            st.experimental_rerun()
     
     with tab2:
         st.subheader("Discover New Circles")
-        # Sample circles
-        circles = [
-            {"name": "Tech Enthusiasts", "members": 189, "description": "Discuss the latest in technology"},
-            {"name": "Fitness Community", "members": 87, "description": "Share workout tips and meetups"},
-            {"name": "Art Lovers", "members": 142, "description": "Appreciate and create art together"}
-        ]
+        all_circles = load_db("circles")
+        user_circles = get_user_circles(st.session_state["user"]["user_id"])
+        user_circle_ids = [c["circle_id"] for c in user_circles]
         
-        for circle in circles:
-            st.markdown(f"""
-            <div style="background:#f0f2f6;padding:10px;border-radius:10px;margin:5px 0;">
-                <strong>{circle['name']}</strong> ({circle['members']} members)
-                <div>{circle['description']}</div>
-            </div>
-            """, unsafe_allow_html=True)
-            if st.button("Join", key=f"join_{circle['name']}"):
-                st.success(f"You've joined {circle['name']}!")
+        discover_circles = [c for c in all_circles.values() if c["circle_id"] not in user_circle_ids]
+        
+        if not discover_circles:
+            st.info("No new circles to discover at the moment. Check back later!")
+        else:
+            for circle in discover_circles[:5]:  # Show up to 5 circles
+                card(
+                    circle["name"],
+                    f"{circle['description']}\n\nMembers: {len(circle['members'])} • Type: {circle['type'].capitalize()}",
+                    action_button="Join Circle"
+                )
     
     with tab3:
         st.subheader("Create a New Circle")
@@ -534,7 +727,7 @@ def circles_page():
             description = st.text_area("Description")
             circle_type = st.radio("Type", ["Public", "Private"])
             location = st.text_input("Primary Location (optional)")
-            tags = st.multiselect("Tags", ["Art", "Music", "Sports", "Food", "Tech", "Nature"])
+            tags = st.multiselect("Tags", ["Art", "Music", "Sports", "Food", "Tech", "Nature", "Business"])
             
             if st.form_submit_button("Create Circle"):
                 if name:
@@ -549,108 +742,167 @@ def circles_page():
                         "members": [st.session_state["user"]["user_id"]],
                         "location": {"name": location} if location else None,
                         "tags": tags,
-                        "created_at": datetime.now().isoformat()
+                        "events": [],
+                        "created_at": datetime.now().isoformat(),
+                        "business_owned": st.session_state["user"]["account_type"] == "business"
                     }
                     save_db("circles", circles)
                     st.success(f"Circle '{name}' created successfully!")
-                    add_notification(st.session_state["user"]["user_id"], "circle", f"You created a new circle: {name}")
+                    add_notification(
+                        st.session_state["user"]["user_id"], 
+                        "circle", 
+                        f"You created a new circle: {name}"
+                    )
+                    time.sleep(1)
+                    st.experimental_rerun()
 
 def events_page():
+    """Events management page"""
     st.title("📅 Events")
     
-    tab1, tab2, tab3 = st.tabs(["Upcoming Events", "Your Events", "Create Event"])
+    tab1, tab2, tab3 = st.tabs(["Upcoming", "Your Events", "Create"])
     
     with tab1:
-        st.subheader("Upcoming Events Near You")
-        # Sample events
-        events = [
-            {"name": "Sunset Photography", "date": "Jun 15", "location": "Brooklyn Bridge", "circle": "NYC Photographers"},
-            {"name": "Food Festival", "date": "Jun 20", "location": "Downtown", "circle": "Food Lovers"},
-            {"name": "Tech Meetup", "date": "Jul 2", "location": "Innovation Center", "circle": "Tech Enthusiasts"}
-        ]
+        st.subheader("Upcoming Events")
+        all_events = load_db("events")
+        upcoming_events = sorted(
+            [e for e in all_events.values() if e["date"] >= datetime.now().strftime("%Y-%m-%d")],
+            key=lambda x: x["date"]
+        )
         
-        for event in events:
-            with st.expander(f"{event['name']} - {event['date']}"):
-                st.write(f"📍 {event['location']}")
-                st.write(f"👥 {event['circle']}")
-                col1, col2 = st.columns(2)
-                with col1:
-                    if st.button("RSVP", key=f"rsvp_{event['name']}"):
-                        st.success(f"You're attending {event['name']}!")
-                with col2:
-                    if st.button("View Details", key=f"details_{event['name']}"):
-                        st.session_state["view_event"] = event['name']
+        if not upcoming_events:
+            st.info("No upcoming events at the moment. Check back later!")
+        else:
+            for event in upcoming_events[:5]:  # Show up to 5 events
+                card(
+                    event["name"],
+                    f"""📅 {event['date']} at {event['time']}
+                    📍 {event['location']['name']}
+                    👥 {len(event['attendees'])} attending
+                    Organized by: {event['organizer']}""",
+                    action_button="RSVP"
+                )
     
     with tab2:
         st.subheader("Events You're Attending")
-        # Sample user events
-        user_events = [
-            {"name": "Sunset Photography", "date": "Jun 15", "status": "Confirmed"},
-            {"name": "Food Tasting", "date": "Jun 18", "status": "Pending"}
-        ]
+        user_events = []
+        all_events = load_db("events")
+        for event in all_events.values():
+            if st.session_state["user"]["user_id"] in event["attendees"]:
+                user_events.append(event)
         
-        for event in user_events:
-            st.markdown(f"""
-            <div style="background:#f0f2f6;padding:10px;border-radius:10px;margin:5px 0;">
-                <strong>{event['name']}</strong>
-                <div>📅 {event['date']} | 🏷️ {event['status']}</div>
-            </div>
-            """, unsafe_allow_html=True)
+        if not user_events:
+            st.info("You're not attending any events yet. Explore upcoming events!")
+        else:
+            for event in user_events:
+                card(
+                    event["name"],
+                    f"""📅 {event['date']} at {event['time']}
+                    Status: {"Confirmed" if event['date'] >= datetime.now().strftime("%Y-%m-%d") else "Past Event"}""",
+                    action_button="View Details"
+                )
     
     with tab3:
         st.subheader("Create New Event")
-        with st.form("create_event"):
-            name = st.text_input("Event Name")
-            description = st.text_area("Description")
-            date = st.date_input("Date")
-            time = st.time_input("Time")
-            location = st.text_input("Location")
-            circle = st.selectbox("Associated Circle (optional)", ["", "NYC Photographers", "Food Lovers"])
-            capacity = st.number_input("Capacity (0 for unlimited)", min_value=0)
-            
-            if st.form_submit_button("Create Event"):
-                event_id = generate_id("evt")
-                events = load_db("events")
-                events[event_id] = {
-                    "event_id": event_id,
-                    "name": name,
-                    "description": description,
-                    "date": date.isoformat(),
-                    "time": str(time),
-                    "location": {"name": location},
-                    "organizer": st.session_state["user"]["user_id"],
-                    "circle_id": circle if circle else None,
-                    "capacity": capacity,
-                    "attendees": [st.session_state["user"]["user_id"]],
-                    "created_at": datetime.now().isoformat()
-                }
-                save_db("events", events)
-                st.success(f"Event '{name}' created successfully!")
+        user_circles = get_user_circles(st.session_state["user"]["user_id"])
+        
+        if not user_circles:
+            st.warning("You need to join or create a circle before creating events")
+        else:
+            with st.form("create_event"):
+                name = st.text_input("Event Name")
+                description = st.text_area("Description")
+                date = st.date_input("Date")
+                time = st.time_input("Time")
+                location = st.text_input("Location")
+                circle = st.selectbox(
+                    "Associated Circle",
+                    [c["name"] for c in user_circles]
+                )
+                capacity = st.number_input("Capacity (0 for unlimited)", min_value=0)
                 
-                # Notify circle members if associated with a circle
-                if circle:
-                    add_notification(st.session_state["user"]["user_id"], "event", 
-                                   f"New event in {circle}: {name}")
+                if st.form_submit_button("Create Event"):
+                    if name:
+                        event_id = generate_id("evt")
+                        events = load_db("events")
+                        circle_id = next(c["circle_id"] for c in user_circles if c["name"] == circle)
+                        
+                        events[event_id] = {
+                            "event_id": event_id,
+                            "name": name,
+                            "description": description,
+                            "date": date.strftime("%Y-%m-%d"),
+                            "time": str(time),
+                            "location": {"name": location},
+                            "organizer": st.session_state["user"]["user_id"],
+                            "circle_id": circle_id,
+                            "capacity": capacity,
+                            "attendees": [st.session_state["user"]["user_id"]],
+                            "tags": [],
+                            "created_at": datetime.now().isoformat()
+                        }
+                        save_db("events", events)
+                        
+                        # Add to circle's events list
+                        circles = load_db("circles")
+                        circles[circle_id]["events"].append(event_id)
+                        save_db("circles", circles)
+                        
+                        st.success(f"Event '{name}' created successfully!")
+                        
+                        # Notify circle members
+                        for member in circles[circle_id]["members"]:
+                            if member != st.session_state["user"]["user_id"]:
+                                add_notification(
+                                    member,
+                                    "event",
+                                    f"New event in {circle}: {name}",
+                                    event_id
+                                )
+                        
+                        time.sleep(1)
+                        st.experimental_rerun()
 
 def business_page():
+    """Business dashboard page"""
     if st.session_state["user"]["account_type"] != "business":
         st.warning("This page is only available for business accounts")
         return
     
     st.title("💼 Business Dashboard")
     
-    tab1, tab2, tab3, tab4 = st.tabs(["Overview", "Promotions", "Statistics", "Verification"])
+    tab1, tab2, tab3, tab4 = st.tabs(["Overview", "Promotions", "Analytics", "Verification"])
     
     with tab1:
         st.subheader("Business Overview")
-        # Sample business data
-        st.metric("Circle Members", "245")
-        st.metric("Media Mentions", "56")
-        st.metric("Active Promotions", "3")
+        
+        # Business info
+        businesses = load_db("businesses")
+        business = next(
+            b for b in businesses.values() 
+            if b["owner_id"] == st.session_state["user"]["user_id"]
+        )
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            card(
+                "Business Profile",
+                f"""Name: {business['business_name']}
+                Category: {business['category']}
+                Status: {"✅ Verified" if business.get('verified', False) else "⏳ Pending"}""",
+                action_button="Edit Profile"
+            )
+        
+        with col2:
+            card(
+                "Locations",
+                "\n".join([loc["address"] for loc in business["locations"]]),
+                action_button="Add Location"
+            )
         
         st.subheader("Recent Activity")
-        st.write("Posts mentioning your business")
-        # Would show media that tags the business
+        # Show business-related activity
+        st.info("Business activity feed would appear here")
     
     with tab2:
         st.subheader("Create Promotion")
@@ -660,197 +912,29 @@ def business_page():
             requirements = st.text_input("Requirements (e.g., 'Post 3 photos with #OurBusiness')")
             start_date = st.date_input("Start Date")
             end_date = st.date_input("End Date")
-            tags = st.multiselect("Relevant Tags", ["Food", "Drink", "Retail", "Service"])
+            tags = st.multiselect("Relevant Tags", ["Food", "Drink", "Retail", "Service", "Discount", "Event"])
             
             if st.form_submit_button("Launch Promotion"):
                 promo_id = generate_id("promo")
                 promotions = load_db("promotions")
+                
+                businesses = load_db("businesses")
+                business_id = next(
+                    b["business_id"] for b in businesses.values() 
+                    if b["owner_id"] == st.session_state["user"]["user_id"]
+                )
+                
                 promotions[promo_id] = {
                     "promo_id": promo_id,
-                    "business_id": st.session_state["user"]["user_id"],
+                    "business_id": business_id,
                     "offer": offer,
                     "description": description,
                     "requirements": requirements,
-                    "start_date": start_date.isoformat(),
-                    "end_date": end_date.isoformat(),
+                    "start_date": start_date.strftime("%Y-%m-%d"),
+                    "end_date": end_date.strftime("%Y-%m-%d"),
                     "tags": tags,
+                    "claimed_by": [],
                     "created_at": datetime.now().isoformat()
                 }
                 save_db("promotions", promotions)
                 st.success("Promotion launched successfully!")
-        
-        st.subheader("Active Promotions")
-        # Show existing promotions
-    
-    with tab3:
-        st.subheader("Business Statistics")
-        # Charts and graphs would go here
-        st.write("Engagement metrics over time")
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            st.metric("New Members (7d)", "24")
-            st.metric("Media Mentions (7d)", "12")
-        with col2:
-            st.metric("Promotion Claims", "8")
-            st.metric("Event Attendees", "15")
-    
-    with tab4:
-        st.subheader("Business Verification")
-        if st.session_state.get("business", {}).get("verified", False):
-            st.success("Your business is verified!")
-        else:
-            st.warning("Your business is not yet verified")
-            st.write("To get verified, please provide:")
-            with st.form("verification_form"):
-                business_license = st.file_uploader("Business License")
-                website = st.text_input("Business Website")
-                additional_info = st.text_area("Additional Information")
-                
-                if st.form_submit_button("Submit for Verification"):
-                    st.success("Verification submitted! We'll review your information within 3 business days.")
-
-def settings_page():
-    st.title("⚙️ Settings")
-    
-    tab1, tab2, tab3 = st.tabs(["Account", "Notifications", "Report Content"])
-    
-    with tab1:
-        st.subheader("Account Settings")
-        with st.form("account_settings"):
-            full_name = st.text_input("Full Name", value=st.session_state["user"].get("full_name", ""))
-            email = st.text_input("Email", value=st.session_state["user"].get("email", ""))
-            location = st.text_input("Location", value=st.session_state["user"].get("location", {}).get("city", ""))
-            interests = st.multiselect("Interests", 
-                                     ["Art", "Music", "Sports", "Food", "Tech", "Nature"],
-                                     default=st.session_state["user"].get("interests", []))
-            
-            if st.form_submit_button("Update Profile"):
-                users = load_db("users")
-                username = [k for k, v in users.items() if v["user_id"] == st.session_state["user"]["user_id"]][0]
-                users[username].update({
-                    "full_name": full_name,
-                    "email": email,
-                    "location": {"city": location},
-                    "interests": interests
-                })
-                save_db("users", users)
-                st.session_state["user"] = users[username]
-                st.success("Profile updated successfully!")
-    
-    with tab2:
-        st.subheader("Notification Settings")
-        st.checkbox("Event reminders", value=True)
-        st.checkbox("Circle updates", value=True)
-        st.checkbox("Promotions", value=True)
-        st.checkbox("New followers", value=True)
-        if st.button("Save Notification Preferences"):
-            st.success("Notification preferences saved!")
-    
-    with tab3:
-        st.subheader("Report Content")
-        with st.form("report_form"):
-            content_type = st.selectbox("Content Type", ["Media", "Circle", "Event", "User"])
-            content_id = st.text_input("Content ID/URL")
-            reason = st.selectbox("Reason", 
-                                ["Inappropriate content", "Spam", "Misinformation", "Harassment", "Other"])
-            details = st.text_area("Additional Details")
-            
-            if st.form_submit_button("Submit Report"):
-                report_id = generate_id("rep")
-                reports = load_db("reports")
-                reports.append({
-                    "report_id": report_id,
-                    "reporter_id": st.session_state["user"]["user_id"],
-                    "content_type": content_type,
-                    "content_id": content_id,
-                    "reason": reason,
-                    "details": details,
-                    "status": "pending",
-                    "timestamp": datetime.now().isoformat()
-                })
-                save_db("reports", reports)
-                st.success("Report submitted. Our team will review it shortly.")
-
-# ===== NOTIFICATION BELL =====
-def notification_bell():
-    notifications = load_db("notifications").get(st.session_state["user"]["user_id"], [])
-    unread = sum(1 for n in notifications if not n["read"])
-    
-    with st.sidebar:
-        if unread > 0:
-            st.button(f"🔔 ({unread})", help="Notifications")
-        else:
-            st.button("🔔", help="Notifications")
-        
-        if st.session_state.get("show_notifications"):
-            st.session_state["show_notifications"] = False
-        else:
-            st.session_state["show_notifications"] = True
-
-# ===== MAIN APP FLOW =====
-def main():
-    # Sidebar navigation
-    with st.sidebar:
-        st.image("https://via.placeholder.com/150x50?text=Atmosphere", use_container_width=True)
-        st.markdown("---")
-        
-        if "logged_in" in st.session_state:
-            # User info
-            st.markdown(f"### Hi, {st.session_state['user']['full_name']}")
-            st.markdown(f"*@{st.session_state['user'].get('email', '')}*")
-            st.markdown("---")
-            
-            # Navigation
-            pages = {
-                "🏠 Home": home_page,
-                "🔍 Explore": explore_page,
-                "📸 Media": media_page,
-                "👥 Circles": circles_page,
-                "📅 Events": events_page,
-                "💼 Business": business_page,
-                "⚙️ Settings": settings_page
-            }
-            
-            selected_page = st.radio("Navigation", list(pages.keys()))
-            
-            # Notification bell
-            notification_bell()
-            
-            st.markdown("---")
-            if st.button("🚪 Logout"):
-                del st.session_state["logged_in"]
-                del st.session_state["user"]
-                st.experimental_rerun()
-            
-            # Display notifications if toggled
-            if st.session_state.get("show_notifications"):
-                notifications = load_db("notifications").get(st.session_state["user"]["user_id"], [])
-                if notifications:
-                    st.subheader("Notifications")
-                    for note in notifications[-5:][::-1]:  # Show 5 most recent
-                        st.markdown(f"""
-                        <div style="background:#f0f2f6;padding:10px;border-radius:10px;margin:5px 0;">
-                            {note['content']}
-                            <div style="color:gray;font-size:0.8em;">
-                                {datetime.fromisoformat(note['timestamp']).strftime('%b %d %H:%M')}
-                            </div>
-                        </div>
-                        """, unsafe_allow_html=True)
-                else:
-                    st.info("No new notifications")
-        else:
-            st.info("Please login to access the app")
-    
-    # Main content area
-    if "logged_in" in st.session_state:
-        pages[selected_page]()
-    else:
-        login_tab, signup_tab = st.tabs(["Login", "Sign Up"])
-        with login_tab:
-            login()
-        with signup_tab:
-            signup()
-
-if __name__ == "__main__":
-    main()
