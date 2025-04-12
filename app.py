@@ -456,7 +456,7 @@ def login_page():
                         add_notification(users[username]["user_id"], "login", "Welcome back to Atmosphere!")
                         st.success("Login successful!")
                         time.sleep(1)
-                        st.experimental_rerun()
+                        st.rerun()
                     else:
                         st.error("Invalid username or password")
             except Exception as e:
@@ -521,7 +521,7 @@ def signup_page():
                         st.session_state["logged_in"] = True
                         st.success("Account created successfully!")
                         time.sleep(1)
-                        st.experimental_rerun()
+                        st.rerun()
 
     with tab2:
         with st.form("business_signup"):
@@ -579,7 +579,7 @@ def signup_page():
                         st.session_state["logged_in"] = True
                         st.success("Business account created! Verification pending.")
                         time.sleep(1)
-                        st.experimental_rerun()
+                        st.rerun()
 
 # ===== MAIN APP PAGES =====
 def home_page():
@@ -795,14 +795,14 @@ def circles_page():
                     with col1:
                         if st.button("View Posts", key=f"posts_{circle['circle_id']}"):
                             st.session_state["current_circle"] = circle['circle_id']
-                            st.experimental_rerun()
+                            st.rerun()
                     with col2:
                         if st.button("Leave Circle", key=f"leave_{circle['circle_id']}"):
                             circles = load_db("circles")
                             circles[circle["circle_id"]]["members"].remove(st.session_state["user"]["user_id"])
                             save_db("circles", circles)
                             st.success(f"You left {circle['name']}")
-                            st.experimental_rerun()
+                            st.rerun()
     
     with tab2:
         st.subheader("Discover New Circles")
@@ -856,7 +856,7 @@ def circles_page():
                         f"You created a new circle: {name}"
                     )
                     time.sleep(1)
-                    st.experimental_rerun()
+                    st.rerun()
 
 def events_page():
     """Events management page"""
@@ -965,7 +965,7 @@ def events_page():
                                 )
                         
                         time.sleep(1)
-                        st.experimental_rerun()
+                        st.rerun()
 
 def business_page():
     """Business dashboard page"""
@@ -1082,7 +1082,7 @@ def main():
                 st.session_state["logged_in"] = False
                 st.session_state["user"] = None
                 st.session_state["current_page"] = "Home"
-                st.experimental_rerun()
+                st.rerun()
             
             # User profile
             st.markdown("---")
