@@ -8,7 +8,23 @@ from PIL import Image
 import random
 import uuid
 
-# ===== CSS STYLING SECTION =====
+# ===== CONSTANTS =====
+DB_FILES = {
+    "users": "data/users.json",
+    "businesses": "data/businesses.json",
+    "media": "data/media.json",
+    "circles": "data/circles.json",
+    "events": "data/events.json",
+    "promotions": "data/promotions.json",
+    "notifications": "data/notifications.json",
+    "reports": "data/reports.json"
+}
+
+MEDIA_DIR = "media_gallery"
+os.makedirs("data", exist_ok=True)
+os.makedirs(MEDIA_DIR, exist_ok=True)
+
+# ===== CSS STYLING =====
 def load_css():
     """Modern social media CSS styling"""
     st.markdown(f"""
@@ -150,6 +166,63 @@ def load_css():
         font-weight: 600;
     }}
 
+    /* Cards */
+    .card {{
+        border-radius: 12px;
+        box-shadow: 0 4px 8px 0 rgba(0,0,0,0.1);
+        padding: 20px;
+        margin-bottom: 25px;
+        background-color: white;
+        transition: transform 0.3s, box-shadow 0.3s;
+        border: 1px solid #e9ecef;
+    }}
+
+    .card:hover {{
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px 0 rgba(0,0,0,0.15);
+    }}
+
+    .card-title {{
+        color: var(--primary);
+        margin-bottom: 15px;
+        font-size: 1.2rem;
+    }}
+
+    /* Hero Section */
+    .hero-container {{
+        position: relative;
+        text-align: center;
+        margin-bottom: 30px;
+    }}
+
+    .hero-text {{
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }}
+
+    .hero-title {{
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+    }}
+
+    /* Activity Feed Items */
+    .activity-item {{
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        border-left: 4px solid var(--accent);
+    }}
+
+    .activity-time {{
+        color: #6c757d;
+        font-size: 0.8rem;
+    }}
+
     /* Responsive Adjustments */
     @media (max-width: 768px) {{
         .auth-container {{
@@ -169,75 +242,15 @@ def load_css():
         .form-panel {{
             border-radius: 0 0 12px 12px;
         }}
-    }}
-    </style>
-    """, unsafe_allow_html=True)
-
-    
-    /* Forms */
-    .stTextInput>div>div>input, 
-    .stTextArea>div>textarea {{
-        border-radius: 8px;
-        border: 1px solid #ced4da;
-    }}
-    .stSelectbox>div>div>div {{
-        border-radius: 8px;
-    }}
-    
-    /* Navigation */
-    .sidebar .sidebar-content {{
-        background-color: var(--light);
-        padding: 15px;
-    }}
-    .sidebar .sidebar-content .block-container {{
-        padding-top: 0;
-    }}
-    
-    /* Hero Section */
-    .hero-container {{
-        position: relative;
-        text-align: center;
-        margin-bottom: 30px;
-    }}
-    .hero-text {{
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        color: white;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-    }}
-    .hero-title {{
-        font-size: 2.5rem;
-        margin-bottom: 10px;
-    }}
-    
-    /* Activity Feed Items */
-    .activity-item {{
-        background-color: #f8f9fa;
-        padding: 15px;
-        border-radius: 10px;
-        margin-bottom: 10px;
-        border-left: 4px solid var(--accent);
-    }}
-    .activity-time {{
-        color: #6c757d;
-        font-size: 0.8rem;
-    }}
-    
-    /* Responsive Adjustments */
-    @media (max-width: 768px) {{
+        
         .hero-title {{
             font-size: 1.8rem;
         }}
-        .card {{
-            margin-bottom: 15px;
-        }}
     }}
     </style>
     """, unsafe_allow_html=True)
 
-# ===== HTML COMPONENTS SECTION =====
+# ===== UI COMPONENTS =====
 def card(title, content, image=None, action_button=None):
     """Reusable card component with optional image and action button"""
     img_html = f'<img src="{image}" style="width:100%; border-radius:8px; margin-bottom:15px;">' if image else ''
@@ -273,131 +286,10 @@ def activity_item(user, action, time_ago):
     </div>
     """, unsafe_allow_html=True)
 
-# ===== DATABASE CONFIGURATION =====
-DB_STRUCTURE = {
-    "users": {
-        "sample_user": {
-            "user_id": "usr_123",
-            "full_name": "John Doe",
-            "email": "john@example.com",
-            "password": "<hashed_password>",
-            "account_type": "general",
-            "verified": True,
-            "joined_date": "2023-01-01",
-            "interests": ["music", "tech"],
-            "location": {"city": "New York", "lat": 40.7128, "lng": -74.0060},
-            "profile_pic": "https://randomuser.me/api/portraits/men/1.jpg"
-        }
-    },
-    "businesses": {
-        "sample_business": {
-            "business_id": "biz_123",
-            "owner_id": "usr_123",
-            "business_name": "Cool Cafe",
-            "category": "Food & Drink",
-            "verified": False,
-            "locations": [
-                {"address": "123 Main St", "lat": 40.7128, "lng": -74.0060}
-            ]
-        }
-    },
-    "media": [
-        {
-            "media_id": "med_123",
-            "user_id": "usr_123",
-            "file_path": "media_gallery/usr_123_photo1.jpg",
-            "location": {"name": "Central Park", "lat": 40.7829, "lng": -73.9654},
-            "timestamp": "2023-01-01T12:00:00",
-            "circle_id": "cir_123",
-            "tags": ["nature", "park"],
-            "reports": []
-        }
-    ],
-    "circles": {
-        "cir_123": {
-            "circle_id": "cir_123",
-            "name": "NYC Photographers",
-            "description": "For photography enthusiasts in NYC",
-            "type": "public",
-            "location": {"city": "New York", "lat": 40.7128, "lng": -74.0060},
-            "members": ["usr_123"],
-            "events": ["evt_123"],
-            "business_owned": False,
-            "created_at": "2023-01-01T10:00:00"
-        }
-    },
-    "events": {
-        "evt_123": {
-            "event_id": "evt_123",
-            "circle_id": "cir_123",
-            "name": "Sunset Photography Meetup",
-            "description": "Let's capture the sunset together!",
-            "location": {"name": "Brooklyn Bridge", "lat": 40.7061, "lng": -73.9969},
-            "date": "2023-06-15",
-            "time": "18:00",
-            "organizer": "usr_123",
-            "attendees": ["usr_123"],
-            "capacity": 20,
-            "tags": ["photography", "outdoors"],
-            "created_at": "2023-05-01T09:00:00"
-        }
-    },
-    "promotions": {
-        "promo_123": {
-            "promo_id": "promo_123",
-            "business_id": "biz_123",
-            "offer": "20% off coffee",
-            "requirements": "Post 3 photos with #CoolCafe",
-            "start_date": "2023-01-01",
-            "end_date": "2023-01-31",
-            "claimed_by": ["usr_123"],
-            "created_at": "2022-12-15T10:00:00"
-        }
-    },
-    "notifications": {
-        "usr_123": [
-            {
-                "notification_id": "notif_123",
-                "type": "event_reminder",
-                "content": "Sunset Photography Meetup starts in 2 hours!",
-                "timestamp": "2023-06-15T16:00:00",
-                "read": False,
-                "related_id": "evt_123"
-            }
-        ]
-    },
-    "reports": [
-        {
-            "report_id": "rep_123",
-            "reporter_id": "usr_123",
-            "content_id": "med_123",
-            "content_type": "media",
-            "reason": "Inappropriate content",
-            "status": "pending",
-            "timestamp": "2023-01-01T12:30:00"
-        }
-    ]
-}
-
-DB_FILES = {
-    "users": "data/users.json",
-    "businesses": "data/businesses.json",
-    "media": "data/media.json",
-    "circles": "data/circles.json",
-    "events": "data/events.json",
-    "promotions": "data/promotions.json",
-    "notifications": "data/notifications.json",
-    "reports": "data/reports.json"
-}
-
-MEDIA_DIR = "media_gallery"
-os.makedirs("data", exist_ok=True)
-os.makedirs(MEDIA_DIR, exist_ok=True)
-
-# ===== HELPER FUNCTIONS =====
+# ===== DATABASE FUNCTIONS =====
 def init_db():
     """Initialize database files with empty structures"""
-    for file, structure in DB_FILES.items():
+    for file, _ in DB_FILES.items():
         if not os.path.exists(file):
             with open(file, "w") as f:
                 if file in ["users", "businesses", "circles", "notifications"]:
@@ -424,9 +316,11 @@ def generate_id(prefix):
     return f"{prefix}_{uuid.uuid4().hex[:8]}"
 
 def hash_password(password):
+    """Hash password using bcrypt"""
     return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
 
 def verify_password(password, hashed):
+    """Verify password against hashed version"""
     return bcrypt.checkpw(password.encode(), hashed.encode())
 
 def add_notification(user_id, notification_type, content, related_id=None):
@@ -506,7 +400,6 @@ def login_page():
     </div>
     """, unsafe_allow_html=True)
 
-# ===== UPDATED SIGNUP PAGE =====
 def signup_page():
     """Modern signup page design"""
     st.markdown("""
@@ -646,185 +539,6 @@ def signup_page():
     </div>
     """, unsafe_allow_html=True)
 
-        with tab2:
-            with st.form("business_signup"):
-                business_name = st.text_input("Business Name")
-                owner_name = st.text_input("Owner/Representative Name")
-                username = st.text_input("Username")
-                email = st.text_input("Business Email")
-                password = st.text_input("Password", type="password")
-                confirm_password = st.text_input("Confirm Password", type="password")
-                category = st.selectbox("Business Category", ["Food & Drink", "Retail", "Services", "Entertainment", "Other"])
-                address = st.text_input("Business Address")
-                
-                # Flex container for the button
-                st.markdown("""
-                <div style='display: flex; justify-content: center; margin-top: 1.5rem;'>
-                """, unsafe_allow_html=True)
-                signup_btn = st.form_submit_button("Register Business", type="primary")
-                st.markdown("</div>", unsafe_allow_html=True)
-                
-                if signup_btn:
-                    if password != confirm_password:
-                        st.error("Passwords don't match!")
-                    else:
-                        users = load_db("users")
-                        businesses = load_db("businesses")
-                        
-                        if username in users:
-                            st.error("Username already exists!")
-                        else:
-                            # Create user account
-                            user_id = generate_id("usr")
-                            users[username] = {
-                                "user_id": user_id,
-                                "full_name": owner_name,
-                                "email": email,
-                                "password": hash_password(password),
-                                "account_type": "business",
-                                "verified": False,
-                                "joined_date": datetime.now().isoformat(),
-                                "profile_pic": f"https://randomuser.me/api/portraits/{random.choice(['men','women'])}/{random.randint(1,100)}.jpg"
-                            }
-                            
-                            # Create business profile
-                            business_id = generate_id("biz")
-                            businesses[business_id] = {
-                                "business_id": business_id,
-                                "owner_id": user_id,
-                                "business_name": business_name,
-                                "category": category,
-                                "verified": False,
-                                "locations": [{"address": address}],
-                                "created_at": datetime.now().isoformat()
-                            }
-                            
-                            save_db("users", users)
-                            save_db("businesses", businesses)
-                            st.session_state["user"] = users[username]
-                            st.session_state["business"] = businesses[business_id]
-                            st.session_state["logged_in"] = True
-                            st.success("Business account created! Verification pending.")
-                            time.sleep(1)
-                            st.experimental_rerun()
-        
-        st.markdown("</div>", unsafe_allow_html=True)  # Close card div
-        
-        # Already have account link
-        st.markdown("""
-        <div style='text-align: center; margin-top: 1rem;'>
-            Already have an account? <a href='#login' style='color: #4361ee; text-decoration: none;'>Login</a>
-        </div>
-        """, unsafe_allow_html=True)
-
-    with col2:
-        # Benefits Card
-        st.markdown("""
-        <div style='background: #f8f9fa; padding: 2rem; border-radius: 12px; height: 100%;'>
-            <h2 style='color: #4361ee; margin-bottom: 1rem;'>Why Join Atmosphere?</h2>
-            
-            <div style='margin-bottom: 2rem;'>
-                <div style='display: flex; align-items: flex-start; margin-bottom: 1.5rem;'>
-                    <div style='background: #4361ee; color: white; border-radius: 8px; padding: 0.5rem; margin-right: 1rem;'>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                            <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm-3.5-6.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5z"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <h4 style='margin: 0; color: #212529;'>Local Connections</h4>
-                        <p style='color: #6c757d; margin: 0.25rem 0 0;'>Meet people in your community with similar interests</p>
-                    </div>
-                </div>
-                
-                <div style='display: flex; align-items: flex-start; margin-bottom: 1.5rem;'>
-                    <div style='background: #4361ee; color: white; border-radius: 8px; padding: 0.5rem; margin-right: 1rem;'>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                            <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm-3.5-6.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5z"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <h4 style='margin: 0; color: #212529;'>Business Growth</h4>
-                        <p style='color: #6c757d; margin: 0.25rem 0 0;'>Connect with potential customers and promote your business</p>
-                    </div>
-                </div>
-                
-                <div style='display: flex; align-items: flex-start; margin-bottom: 1.5rem;'>
-                    <div style='background: #4361ee; color: white; border-radius: 8px; padding: 0.5rem; margin-right: 1rem;'>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                            <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm-3.5-6.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5z"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <h4 style='margin: 0; color: #212529;'>Exclusive Events</h4>
-                        <p style='color: #6c757d; margin: 0.25rem 0 0;'>Discover and attend local events tailored to your interests</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div style='text-align: center; margin-top: 2rem;'>
-                <p style='color: #6c757d;'>Already a member? <a href='#login' style='color: #4361ee; text-decoration: none;'>Sign in</a></p>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    with tab2:
-        with st.form("business_signup"):
-            st.subheader("Register Your Business")
-            business_name = st.text_input("Business Name")
-            owner_name = st.text_input("Owner/Representative Name")
-            username = st.text_input("Username")
-            email = st.text_input("Business Email")
-            password = st.text_input("Password", type="password")
-            confirm_password = st.text_input("Confirm Password", type="password")
-            category = st.selectbox("Business Category", ["Food & Drink", "Retail", "Services", "Entertainment", "Other"])
-            address = st.text_input("Business Address")
-            
-            signup_btn = st.form_submit_button("Register Business")
-            
-            if signup_btn:
-                if password != confirm_password:
-                    st.error("Passwords don't match!")
-                else:
-                    users = load_db("users")
-                    businesses = load_db("businesses")
-                    
-                    if username in users:
-                        st.error("Username already exists!")
-                    else:
-                        # Create user account
-                        user_id = generate_id("usr")
-                        users[username] = {
-                            "user_id": user_id,
-                            "full_name": owner_name,
-                            "email": email,
-                            "password": hash_password(password),
-                            "account_type": "business",
-                            "verified": False,
-                            "joined_date": datetime.now().isoformat(),
-                            "profile_pic": f"https://randomuser.me/api/portraits/{random.choice(['men','women'])}/{random.randint(1,100)}.jpg"
-                        }
-                        
-                        # Create business profile
-                        business_id = generate_id("biz")
-                        businesses[business_id] = {
-                            "business_id": business_id,
-                            "owner_id": user_id,
-                            "business_name": business_name,
-                            "category": category,
-                            "verified": False,
-                            "locations": [{"address": address}],
-                            "created_at": datetime.now().isoformat()
-                        }
-                        
-                        save_db("users", users)
-                        save_db("businesses", businesses)
-                        st.session_state["user"] = users[username]
-                        st.session_state["business"] = businesses[business_id]
-                        st.session_state["logged_in"] = True
-                        st.success("Business account created! Verification pending.")
-                        time.sleep(1)
-                        st.experimental_rerun()
-
 # ===== MAIN APP PAGES =====
 def home_page():
     """Home page with user dashboard"""
@@ -950,15 +664,15 @@ def media_page():
             # Add to database
             media = load_db("media")
             media.append({
-    "media_id": media_id,
-    "user_id": st.session_state["user"]["user_id"],
-    "file_path": filepath,
-    "location": {"name": location},
-    "timestamp": datetime.now().isoformat(),
-    "circle_id": next((c["circle_id"] for c in user_circles if c["name"] == selected_circle), None), # Added None as default, and closed the next() call
-    "tags": tags,
-    "reports": []
-})
+                "media_id": media_id,
+                "user_id": st.session_state["user"]["user_id"],
+                "file_path": filepath,
+                "location": {"name": location},
+                "timestamp": datetime.now().isoformat(),
+                "circle_id": next((c["circle_id"] for c in user_circles if c["name"] == selected_circle), None),
+                "tags": tags,
+                "reports": []
+            })
            
             save_db("media", media)
             
