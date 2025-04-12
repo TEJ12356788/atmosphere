@@ -307,7 +307,13 @@ def load_db(file_key):
     """Load database file"""
     try:
         with open(DB_FILES[file_key], "r") as f:
-            return json.load(f)
+            data = json.load(f)
+            # Ensure the structure matches expected format
+            if file_key in ["users", "businesses", "circles", "events", "promotions", "notifications"] and not isinstance(data, dict):
+                return {}
+            elif file_key in ["media", "reports"] and not isinstance(data, list):
+                return []
+            return data
     except (FileNotFoundError, json.JSONDecodeError):
         init_db()
         return load_db(file_key)
@@ -357,6 +363,69 @@ def get_circle_events(circle_id):
     """Get all events for a specific circle"""
     events = load_db("events")
     return [e for e in events.values() if e["circle_id"] == circle_id]
+
+def generate_sample_data():
+    """Generate sample data if databases are empty"""
+    users = load_db("users")
+    if not users:
+        users["sample_user"] = {
+            "user_id": "usr_123",
+            "full_name": "John Doe",
+            "email": "john@example.com",
+            "password": hash_password("password123"),
+            "account_type": "general",
+            "verified": True,
+            "joined_date": datetime.now().strftime("%Y-%m-%d"),
+            "interests": ["music", "tech"],
+            "location": {"city": "New York", "lat": 40.7128, "lng": -74.0060},
+            "profile_pic": "https://randomuser.me/api/portraits/men/1.jpg"
+        }
+        save_db("users", users)
+    
+    circles = load_db("circles")
+    if not circles:
+        circles["cir_123"] = {
+            "circle_id": "cir_123",
+            "name": "NYC Photographers",
+            "description": "For photography enthusiasts in NYC",
+            "type": "public",
+            "location": {"city": "New York", "lat": 40.7128, "lng": -74.0060},
+            "members": ["usr_123"],
+            "events": ["evt_123"],
+            "business_owned": False,
+            "created_at": datetime.now().isoformat()
+        }
+        save_db("circles", circles)
+    
+    events = load_db("events")
+    if not events:
+        events["evt_123"] = {
+            "event_id": "evt_123",
+            "circle_id": "cir_123",
+            "name": "Sunset Photography Meetup",
+            "description": "Let's capture the sunset together!",
+            "location": {"name": "Brooklyn Bridge", "lat": 40.7061, "lng": -73.9969},
+            "date": datetime.now().strftime("%Y-%m-%d"),
+            "time": "18:00",
+            "organizer": "usr_123",
+            "attendees": ["usr_123"],
+            "capacity": 20,
+            "tags": ["photography", "outdoors"],
+            "created_at": datetime.now().isoformat()
+        }
+        save_db("events", events)
+    
+    # Ensure sample user has notifications
+    notifications = load_db("notifications")
+    if "usr_123" not in notifications:
+        notifications["usr_123"] = [{
+            "notification_id": "notif_123",
+            "type": "welcome",
+            "content": "Welcome to Atmosphere! Get started by joining a circle.",
+            "timestamp": datetime.now().isoformat(),
+            "read": False
+        }]
+        save_db("notifications", notifications)
 
 # ===== AUTHENTICATION PAGES =====
 def login_page():
@@ -515,6 +584,8 @@ def signup_page():
 # ===== MAIN APP PAGES =====
 def home_page():
     """Home page with user dashboard"""
+    generate_sample_data()
+    
     hero_section(
         f"Welcome, {st.session_state['user']['full_name']}", 
         "What would you like to do today?",
@@ -522,51 +593,68 @@ def home_page():
     )
     
     # User stats
+    user_circles = get_user_circles(st.session_state["user"]["user_id"])
+    user_events = sum(len(get_circle_events(c["circle_id"])) for c in user_circles)
+    user_media = len(get_user_media(st.session_state["user"]["user_id"]))
+    
     col1, col2, col3 = st.columns(3)
     with col1:
-        card("Circles Joined", str(len(get_user_circles(st.session_state["user"]["user_id"]))))
+        card("Circles Joined", str(len(user_circles)) or "0")
     with col2:
-        user_events = sum(len(get_circle_events(c["circle_id"])) for c in get_user_circles(st.session_state["user"]["user_id"]))
-        card("Events Available", str(user_events))
+        card("Events Available", str(user_events) or "0")
     with col3:
-        card("Media Shared", str(len(get_user_media(st.session_state["user"]["user_id"]))))
+        card("Media Shared", str(user_media) or "0")
     
     # Activity feed
     st.subheader("📰 Your Activity Feed")
     tab1, tab2, tab3 = st.tabs(["Recent Activity", "Your Circles", "Upcoming Events"])
     
     with tab1:
-        activities = [
-            {"user": "JaneDoe", "action": "posted a photo in NYC Photographers", "time": "2h ago"},
-            {"user": "MikeT", "action": "created an event: Central Park Picnic", "time": "5h ago"},
-            {"user": "CoffeeShop", "action": "offered 20% off for photos", "time": "1d ago"}
-        ]
-        for activity in activities:
-            activity_item(activity["user"], activity["action"], activity["time"])
+        notifications = load_db("notifications").get(st.session_state["user"]["user_id"], [])
+        if not notifications:
+            activities = [
+                {"user": "JaneDoe", "action": "posted a photo in NYC Photographers", "time": "2h ago"},
+                {"user": "MikeT", "action": "created an event: Central Park Picnic", "time": "5h ago"},
+                {"user": "CoffeeShop", "action": "offered 20% off for photos", "time": "1d ago"}
+            ]
+            for activity in activities:
+                activity_item(activity["user"], activity["action"], activity["time"])
+        else:
+            for notif in notifications[:3]:
+                activity_item("System", notif["content"], 
+                            datetime.fromisoformat(notif["timestamp"]).strftime("%b %d, %H:%M"))
     
     with tab2:
-        circles = get_user_circles(st.session_state["user"]["user_id"])
-        for circle in circles[:3]:  # Show first 3 circles
-            card(
-                circle["name"],
-                f"Members: {len(circle['members'])}\nType: {circle['type'].capitalize()}",
-                action_button="View Circle"
-            )
+        circles = user_circles[:3]
+        if not circles:
+            st.info("You haven't joined any circles yet. Explore some in the Circles tab!")
+        else:
+            for circle in circles:
+                card(
+                    circle["name"],
+                    f"Members: {len(circle['members'])}\nType: {circle['type'].capitalize()}",
+                    action_button="View Circle"
+                )
     
     with tab3:
         events = []
-        for circle in get_user_circles(st.session_state["user"]["user_id"]):
+        for circle in user_circles:
             events.extend(get_circle_events(circle["circle_id"]))
         
-        for event in sorted(events, key=lambda x: x["date"])[:3]:  # Show next 3 events
-            card(
-                event["name"],
-                f"📅 {event['date']} at {event['time']}\n📍 {event['location']['name']}",
-                action_button="RSVP"
-            )
+        events = sorted(events, key=lambda x: x["date"])[:3]
+        if not events:
+            st.info("No upcoming events in your circles. Check back later!")
+        else:
+            for event in events:
+                card(
+                    event["name"],
+                    f"📅 {event['date']} at {event['time']}\n📍 {event['location']['name']}",
+                    action_button="RSVP"
+                )
 
 def explore_page():
     """Explore page to discover content"""
+    generate_sample_data()
     st.title("🔍 Explore Our Community")
     
     # Search functionality
@@ -584,23 +672,29 @@ def explore_page():
     
     # Popular circles
     st.subheader("👥 Popular Circles")
-    circles = load_db("circles")
-    for circle_id, circle in list(circles.items())[:3]:  # Show 3 sample circles
-        card(
-            circle["name"],
-            circle["description"],
-            action_button="Join Circle"
-        )
+    circles = list(load_db("circles").values())
+    if not circles:
+        st.info("No circles available yet. Be the first to create one!")
+    else:
+        for circle in circles[:3]:
+            card(
+                circle["name"],
+                circle["description"],
+                action_button="Join Circle"
+            )
     
     # Upcoming events
     st.subheader("📅 Upcoming Events")
-    events = load_db("events")
-    for event_id, event in list(events.items())[:3]:  # Show 3 sample events
-        card(
-            event["name"],
-            f"📅 {event['date']} at {event['time']}\n📍 {event['location']['name']}",
-            action_button="View Details"
-        )
+    events = list(load_db("events").values())
+    if not events:
+        st.info("No events scheduled yet. Check back later!")
+    else:
+        for event in events[:3]:
+            card(
+                event["name"],
+                f"📅 {event['date']} at {event['time']}\n📍 {event['location']['name']}",
+                action_button="View Details"
+            )
 
 def media_page():
     """Media upload and gallery page"""
@@ -682,6 +776,7 @@ def media_page():
 
 def circles_page():
     """Circles management page"""
+    generate_sample_data()
     st.title("👥 Your Circles")
     
     tab1, tab2, tab3 = st.tabs(["Your Circles", "Discover", "Create"])
@@ -720,7 +815,7 @@ def circles_page():
         if not discover_circles:
             st.info("No new circles to discover at the moment. Check back later!")
         else:
-            for circle in discover_circles[:5]:  # Show up to 5 circles
+            for circle in discover_circles[:5]:
                 card(
                     circle["name"],
                     f"{circle['description']}\n\nMembers: {len(circle['members'])} • Type: {circle['type'].capitalize()}",
@@ -765,6 +860,7 @@ def circles_page():
 
 def events_page():
     """Events management page"""
+    generate_sample_data()
     st.title("📅 Events")
     
     tab1, tab2, tab3 = st.tabs(["Upcoming", "Your Events", "Create"])
@@ -780,7 +876,7 @@ def events_page():
         if not upcoming_events:
             st.info("No upcoming events at the moment. Check back later!")
         else:
-            for event in upcoming_events[:5]:  # Show up to 5 events
+            for event in upcoming_events[:5]:
                 card(
                     event["name"],
                     f"""📅 {event['date']} at {event['time']}
@@ -825,6 +921,7 @@ def events_page():
                 circle = st.selectbox(
                     "Associated Circle",
                     [c["name"] for c in user_circles]
+               
                 )
                 capacity = st.number_input("Capacity (0 for unlimited)", min_value=0)
                 
