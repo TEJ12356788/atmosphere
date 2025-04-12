@@ -8,262 +8,65 @@ from PIL import Image
 import random
 import uuid
 
-# ===== CONSTANTS =====
-DB_FILES = {
-    "users": "data/users.json",
-    "businesses": "data/businesses.json",
-    "media": "data/media.json",
-    "circles": "data/circles.json",
-    "events": "data/events.json",
-    "promotions": "data/promotions.json",
-    "notifications": "data/notifications.json",
-    "reports": "data/reports.json"
-}
-
-MEDIA_DIR = "media_gallery"
-os.makedirs("data", exist_ok=True)
-os.makedirs(MEDIA_DIR, exist_ok=True)
-
-# ===== CSS STYLING =====
+# ===== CSS STYLING SECTION =====
 def load_css():
-    """Modern social media CSS styling"""
-    st.markdown(f"""
+    st.markdown("""
     <style>
-    /* Color Variables */
-    :root {{
-        --primary: #4361ee;
-        --primary-light: #4895ef;
-        --primary-dark: #3f37c9;
-        --secondary: #f72585;
-        --accent: #4cc9f0;
-        --light: #f8f9fa;
-        --dark: #212529;
-        --gray: #6c757d;
-        --light-gray: #e9ecef;
-        --success: #4cc9f0;
-        --warning: #f72585;
-        --danger: #7209b7;
-    }}
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
 
-    /* Base Styles */
-    body {{
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        line-height: 1.6;
-        color: var(--dark);
-        background-color: #f5f7fa;
-    }}
-
-    /* Main Container */
-    .main-container {{
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 20px;
-    }}
-
-    /* Auth Container */
-    .auth-container {{
-        display: flex;
-        min-height: 80vh;
-        align-items: center;
-    }}
-
-    /* Left Panel - Branding */
-    .branding-panel {{
-        flex: 1;
-        padding: 40px;
-        background: linear-gradient(135deg, var(--primary), var(--primary-light));
-        color: white;
-        border-radius: 12px 0 0 12px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-    }}
-
-    .branding-panel h1 {{
-        font-size: 2.5rem;
-        margin-bottom: 20px;
-        font-weight: 700;
-    }}
-
-    .branding-panel p {{
-        font-size: 1.1rem;
-        opacity: 0.9;
-        margin-bottom: 30px;
-    }}
-
-    .feature-list {{
-        list-style: none;
-        padding: 0;
-    }}
-
-    .feature-list li {{
-        margin-bottom: 15px;
-        display: flex;
-        align-items: center;
-    }}
-
-    .feature-list li:before {{
-        content: "✓";
-        margin-right: 10px;
-        font-weight: bold;
-    }}
-
-    /* Right Panel - Form */
-    .form-panel {{
-        flex: 1;
-        padding: 40px;
-        background: white;
-        border-radius: 0 12px 12px 0;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-    }}
-
-    .form-panel h2 {{
-        color: var(--primary);
-        margin-bottom: 30px;
-        font-size: 1.8rem;
-    }}
-
-    /* Form Elements */
-    .stTextInput>div>div>input,
-    .stTextArea>div>textarea,
-    .stSelectbox>div>div>div {{
-        border-radius: 8px;
-        border: 1px solid var(--light-gray);
-        padding: 10px 15px;
-    }}
-
-    .stTextInput>div>div>input:focus,
-    .stTextArea>div>textarea:focus {{
-        border-color: var(--primary-light);
-        box-shadow: 0 0 0 2px rgba(72, 149, 239, 0.2);
-    }}
-
-    /* Buttons */
-    .stButton>button {{
-        border-radius: 8px;
-        padding: 12px 24px;
-        background-color: var(--primary);
-        color: white;
-        border: none;
-        transition: all 0.3s;
-        font-weight: 500;
-        width: 100%;
-    }}
-
-    .stButton>button:hover {{
-        background-color: var(--primary-dark);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(67, 97, 238, 0.2);
-    }}
-
-    /* Tabs */
-    .stTabs>div>div>div>div {{
-        color: var(--gray);
-    }}
-
-    .stTabs>div>div>div>div[aria-selected="true"] {{
-        color: var(--primary);
-        font-weight: 600;
-    }}
-
-    /* Cards */
-    .card {
-    background-color: white;
-    border-radius: 16px;
-    padding: 20px;
-    border: 1px solid #dee2e6;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    margin-bottom: 20px;
-}
-.card-title {
-    color: #4361ee;
-    margin-bottom: 12px;
-    font-size: 1.2rem;
-    font-weight: 600;
-}
-
-
-    .card:hover {{
-        transform: translateY(-5px);
-        box-shadow: 0 8px 16px 0 rgba(0,0,0,0.15);
-    }}
-
-
-    /* Hero Section */
-    .hero-container {{
-        position: relative;
-        text-align: center;
-        margin-bottom: 30px;
-    }}
-
-    .hero-text {{
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        color: white;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-    }}
-
-    .hero-title {{
-        font-size: 2.5rem;
-        margin-bottom: 10px;
-    }}
-
-    /* Activity Feed Items */
-    .activity-item {{
+    html, body, [class*="css"] {
+        font-family: 'Inter', sans-serif;
         background-color: #f8f9fa;
-        padding: 15px;
-        border-radius: 10px;
+        color: #212529;
+    }
+
+    .card {
+        background-color: #ffffff;
+        border-radius: 16px;
+        padding: 20px;
+        border: 1px solid #dee2e6;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
+    }
+
+    .card-title {
+        color: #4361ee;
+        margin-bottom: 12px;
+        font-size: 1.2rem;
+        font-weight: 600;
+    }
+
+    .stButton>button {
+        background-color: #4361ee;
+        color: white;
+        padding: 10px 20px;
+        font-weight: 600;
+        border-radius: 8px;
+        border: none;
+        transition: background-color 0.3s ease;
+    }
+
+    .stButton>button:hover {
+        background-color: #3f37c9;
+    }
+
+    .hero-title {
+        font-size: 2.8rem;
+        font-weight: 700;
+        color: #4361ee;
+        text-align: center;
         margin-bottom: 10px;
-        border-left: 4px solid var(--accent);
-    }}
+    }
 
-    .activity-time {{
-        color: #6c757d;
-        font-size: 0.8rem;
-    }}
-
-    /* Responsive Adjustments */
-    @media (max-width: 768px) {{
-        .auth-container {{
-            flex-direction: column;
-        }}
-        
-        .branding-panel,
-        .form-panel {{
-            border-radius: 12px;
-            margin-bottom: 20px;
-        }}
-        
-        .branding-panel {{
-            border-radius: 12px 12px 0 0;
-        }}
-        
-        .form-panel {{
-            border-radius: 0 0 12px 12px;
-        }}
-        
-        .hero-title {{
-            font-size: 1.8rem;
-        }}
-    }}
+    .hero-subtitle {
+        font-size: 1.1rem;
+        color: #495057;
+        text-align: center;
+        max-width: 700px;
+        margin: auto;
+        margin-bottom: 20px;
+    }
     </style>
-    """, unsafe_allow_html=True)
-
-# ===== UI COMPONENTS =====
-def card(title, content, image=None, action_button=None):
-    """Reusable card component with optional image and action button"""
-    img_html = f'<img src="{image}" style="width:100%; border-radius:8px; margin-bottom:15px;">' if image else ''
-    button_html = f'<button class="card-button">{action_button}</button>' if action_button else ''
-    
-    st.markdown(f"""
-    <div class="card">
-        <div class="card-title">{title}</div>
-        {img_html}
-        <div class="card-content">{content}</div>
-        {button_html}
-    </div>
     """, unsafe_allow_html=True)
 
 def hero_section(title, subtitle, image_url):
@@ -287,14 +90,134 @@ def activity_item(user, action, time_ago):
     </div>
     """, unsafe_allow_html=True)
 
-# ===== DATABASE FUNCTIONS =====
+# ===== DATABASE CONFIGURATION =====
+DB_STRUCTURE = {
+    "users": {
+        "sample_user": {
+            "user_id": "usr_123",
+            "full_name": "John Doe",
+            "email": "john@example.com",
+            "password": "<hashed_password>",
+            "account_type": "general",
+            "verified": True,
+            "joined_date": "2023-01-01",
+            "interests": ["music", "tech"],
+            "location": {"city": "New York", "lat": 40.7128, "lng": -74.0060},
+            "profile_pic": "https://randomuser.me/api/portraits/men/1.jpg"
+        }
+    },
+    "businesses": {
+        "sample_business": {
+            "business_id": "biz_123",
+            "owner_id": "usr_123",
+            "business_name": "Cool Cafe",
+            "category": "Food & Drink",
+            "verified": False,
+            "locations": [
+                {"address": "123 Main St", "lat": 40.7128, "lng": -74.0060}
+            ]
+        }
+    },
+    "media": [
+        {
+            "media_id": "med_123",
+            "user_id": "usr_123",
+            "file_path": "media_gallery/usr_123_photo1.jpg",
+            "location": {"name": "Central Park", "lat": 40.7829, "lng": -73.9654},
+            "timestamp": "2023-01-01T12:00:00",
+            "circle_id": "cir_123",
+            "tags": ["nature", "park"],
+            "reports": []
+        }
+    ],
+    "circles": {
+        "cir_123": {
+            "circle_id": "cir_123",
+            "name": "NYC Photographers",
+            "description": "For photography enthusiasts in NYC",
+            "type": "public",
+            "location": {"city": "New York", "lat": 40.7128, "lng": -74.0060},
+            "members": ["usr_123"],
+            "events": ["evt_123"],
+            "business_owned": False,
+            "created_at": "2023-01-01T10:00:00"
+        }
+    },
+    "events": {
+        "evt_123": {
+            "event_id": "evt_123",
+            "circle_id": "cir_123",
+            "name": "Sunset Photography Meetup",
+            "description": "Let's capture the sunset together!",
+            "location": {"name": "Brooklyn Bridge", "lat": 40.7061, "lng": -73.9969},
+            "date": "2023-06-15",
+            "time": "18:00",
+            "organizer": "usr_123",
+            "attendees": ["usr_123"],
+            "capacity": 20,
+            "tags": ["photography", "outdoors"],
+            "created_at": "2023-05-01T09:00:00"
+        }
+    },
+    "promotions": {
+        "promo_123": {
+            "promo_id": "promo_123",
+            "business_id": "biz_123",
+            "offer": "20% off coffee",
+            "requirements": "Post 3 photos with #CoolCafe",
+            "start_date": "2023-01-01",
+            "end_date": "2023-01-31",
+            "claimed_by": ["usr_123"],
+            "created_at": "2022-12-15T10:00:00"
+        }
+    },
+    "notifications": {
+        "usr_123": [
+            {
+                "notification_id": "notif_123",
+                "type": "event_reminder",
+                "content": "Sunset Photography Meetup starts in 2 hours!",
+                "timestamp": "2023-06-15T16:00:00",
+                "read": False,
+                "related_id": "evt_123"
+            }
+        ]
+    },
+    "reports": [
+        {
+            "report_id": "rep_123",
+            "reporter_id": "usr_123",
+            "content_id": "med_123",
+            "content_type": "media",
+            "reason": "Inappropriate content",
+            "status": "pending",
+            "timestamp": "2023-01-01T12:30:00"
+        }
+    ]
+}
+
+DB_FILES = {
+    "users": "data/users.json",
+    "businesses": "data/businesses.json",
+    "media": "data/media.json",
+    "circles": "data/circles.json",
+    "events": "data/events.json",
+    "promotions": "data/promotions.json",
+    "notifications": "data/notifications.json",
+    "reports": "data/reports.json"
+}
+
+MEDIA_DIR = "media_gallery"
+os.makedirs("data", exist_ok=True)
+os.makedirs(MEDIA_DIR, exist_ok=True)
+
+# ===== HELPER FUNCTIONS =====
 def init_db():
     """Initialize database files with empty structures"""
-    for file_key in DB_FILES:
-        file_path = DB_FILES[file_key]
-        if not os.path.exists(file_path):
-            with open(file_path, "w") as f:
-                if file_key in ["users", "businesses", "circles", "notifications"]:
+    for file, structure in DB_FILES.items():
+        if not os.path.exists(file):
+            with open(file, "w") as f:
+                if file in ["users", "businesses", "circles", "notifications"]:
                     json.dump({}, f)
                 else:
                     json.dump([], f)
@@ -318,11 +241,9 @@ def generate_id(prefix):
     return f"{prefix}_{uuid.uuid4().hex[:8]}"
 
 def hash_password(password):
-    """Hash password using bcrypt"""
     return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
 
 def verify_password(password, hashed):
-    """Verify password against hashed version"""
     return bcrypt.checkpw(password.encode(), hashed.encode())
 
 def add_notification(user_id, notification_type, content, related_id=None):
@@ -358,8 +279,6 @@ def get_circle_events(circle_id):
 
 # ===== AUTHENTICATION PAGES =====
 def login_page():
-    """Beautifully styled landing/login page for Atmosphere"""
-
     st.markdown("""
         <h1 style='text-align: center; font-size: 3rem; color: #4361ee;'>Welcome to Atmosphere</h1>
         <p style='text-align: center; font-size: 1.1rem; color: #495057; max-width: 700px; margin: auto;'>
@@ -368,20 +287,16 @@ def login_page():
         </p>
     """, unsafe_allow_html=True)
 
-    # Hero Banner Image
     st.image("https://images.unsplash.com/photo-1469474968028-56623f02e42e", use_container_width=True, caption="Capture the vibe with Atmosphere")
-
     st.markdown("---")
 
     col1, col2 = st.columns([2, 1])
-
     with col1:
         st.subheader("🔐 Log In to Your Account")
         with st.form("login_form"):
             username = st.text_input("Username", key="login_username")
             password = st.text_input("Password", type="password", key="login_password")
             login_btn = st.form_submit_button("Login")
-
             if login_btn:
                 users = load_db("users")
                 if username in users and verify_password(password, users[username]["password"]):
@@ -393,7 +308,6 @@ def login_page():
                     st.experimental_rerun()
                 else:
                     st.error("Invalid username or password")
-
     with col2:
         st.markdown("""
             <div class="card">
@@ -409,45 +323,21 @@ def login_page():
             </div>
         """, unsafe_allow_html=True)
 
-
 def signup_page():
-    """Modern signup page design"""
-    st.markdown("""
-    <div class="auth-container">
-        <div class="branding-panel">
-            <h1>Join Atmosphere</h1>
-            <p>Become part of a growing community of explorers and creators</p>
-            <ul class="feature-list">
-                <li>Customize your profile and interests</li>
-                <li>Get personalized recommendations</li>
-                <li>Earn rewards from local businesses</li>
-                <li>Create and join events</li>
-            </ul>
-        </div>
-        <div class="form-panel">
-    """, unsafe_allow_html=True)
+    """Signup page with tabs for different account types"""
+    st.title("🆕 Join Our Community")
     
-    st.title("Create Your Account")
-    tab1, tab2 = st.tabs(["👤 Personal Account", "💼 Business Account"])
+    tab1, tab2 = st.tabs(["👤 General User", "💼 Business Account"])
     
     with tab1:
         with st.form("general_signup"):
-            st.markdown("<h2 style='color: var(--primary);'>Personal Account</h2>", unsafe_allow_html=True)
-            
-            col1, col2 = st.columns(2)
-            with col1:
-                full_name = st.text_input("Full Name")
-                username = st.text_input("Username")
-            with col2:
-                email = st.text_input("Email")
-                location = st.text_input("Your Location (City)")
-            
-            col3, col4 = st.columns(2)
-            with col3:
-                password = st.text_input("Password", type="password")
-            with col4:
-                confirm_password = st.text_input("Confirm Password", type="password")
-            
+            st.subheader("Create Personal Account")
+            full_name = st.text_input("Full Name")
+            username = st.text_input("Username")
+            email = st.text_input("Email")
+            password = st.text_input("Password", type="password")
+            confirm_password = st.text_input("Confirm Password", type="password")
+            location = st.text_input("Your Location (City)")
             interests = st.multiselect("Your Interests", ["Art", "Music", "Sports", "Food", "Tech", "Nature"])
             
             signup_btn = st.form_submit_button("Create Account")
@@ -478,23 +368,17 @@ def signup_page():
                         st.session_state["logged_in"] = True
                         st.success("Account created successfully!")
                         time.sleep(1)
-                        st.rerun()
-    
+                        st.experimental_rerun()
+
     with tab2:
         with st.form("business_signup"):
-            st.markdown("<h2 style='color: var(--primary);'>Business Account</h2>", unsafe_allow_html=True)
-            
+            st.subheader("Register Your Business")
             business_name = st.text_input("Business Name")
             owner_name = st.text_input("Owner/Representative Name")
-            
-            col1, col2 = st.columns(2)
-            with col1:
-                username = st.text_input("Username")
-                email = st.text_input("Business Email")
-            with col2:
-                password = st.text_input("Password", type="password")
-                confirm_password = st.text_input("Confirm Password", type="password")
-            
+            username = st.text_input("Username")
+            email = st.text_input("Business Email")
+            password = st.text_input("Password", type="password")
+            confirm_password = st.text_input("Confirm Password", type="password")
             category = st.selectbox("Business Category", ["Food & Drink", "Retail", "Services", "Entertainment", "Other"])
             address = st.text_input("Business Address")
             
@@ -506,6 +390,7 @@ def signup_page():
                 else:
                     users = load_db("users")
                     businesses = load_db("businesses")
+                    
                     if username in users:
                         st.error("Username already exists!")
                     else:
@@ -521,6 +406,7 @@ def signup_page():
                             "joined_date": datetime.now().isoformat(),
                             "profile_pic": f"https://randomuser.me/api/portraits/{random.choice(['men','women'])}/{random.randint(1,100)}.jpg"
                         }
+                        
                         # Create business profile
                         business_id = generate_id("biz")
                         businesses[business_id] = {
@@ -532,6 +418,7 @@ def signup_page():
                             "locations": [{"address": address}],
                             "created_at": datetime.now().isoformat()
                         }
+                        
                         save_db("users", users)
                         save_db("businesses", businesses)
                         st.session_state["user"] = users[username]
@@ -539,15 +426,7 @@ def signup_page():
                         st.session_state["logged_in"] = True
                         st.success("Business account created! Verification pending.")
                         time.sleep(1)
-                        st.rerun()
-    
-    st.markdown("""
-    <div style="text-align: center; margin-top: 20px;">
-        <p>Already have an account? <a href="#login" onclick="window.location.hash='login'">Login here</a></p>
-    </div>
-    </div>
-    </div>
-    """, unsafe_allow_html=True)
+                        st.experimental_rerun()
 
 # ===== MAIN APP PAGES =====
 def home_page():
@@ -679,11 +558,10 @@ def media_page():
                 "file_path": filepath,
                 "location": {"name": location},
                 "timestamp": datetime.now().isoformat(),
-                "circle_id": next((c["circle_id"] for c in user_circles if c["name"] == selected_circle), None),
+                "circle_id": next((c["circle_id"] for c in user_circles if c["name"] == selected_circle), 
                 "tags": tags,
                 "reports": []
-            })
-           
+            )})
             save_db("media", media)
             
             st.success("Media uploaded successfully!")
@@ -738,14 +616,14 @@ def circles_page():
                     with col1:
                         if st.button("View Posts", key=f"posts_{circle['circle_id']}"):
                             st.session_state["current_circle"] = circle['circle_id']
-                            st.rerun()
+                            st.experimental_rerun()
                     with col2:
                         if st.button("Leave Circle", key=f"leave_{circle['circle_id']}"):
                             circles = load_db("circles")
                             circles[circle["circle_id"]]["members"].remove(st.session_state["user"]["user_id"])
                             save_db("circles", circles)
                             st.success(f"You left {circle['name']}")
-                            st.rerun()
+                            st.experimental_rerun()
     
     with tab2:
         st.subheader("Discover New Circles")
@@ -799,7 +677,7 @@ def circles_page():
                         f"You created a new circle: {name}"
                     )
                     time.sleep(1)
-                    st.rerun()
+                    st.experimental_rerun()
 
 def events_page():
     """Events management page"""
@@ -906,7 +784,7 @@ def events_page():
                                 )
                         
                         time.sleep(1)
-                        st.rerun()
+                        st.experimental_rerun()
 
 def business_page():
     """Business dashboard page"""
@@ -955,27 +833,6 @@ def business_page():
             offer = st.text_input("Offer (e.g., '20% off')")
             description = st.text_area("Promotion Details")
             requirements = st.text_input("Requirements (e.g., 'Post 3 photos with #OurBusiness')")
-            start_date = st.date_input("Start Date")
-            end_date = st.date_input("End Date")
-            tags = st.multiselect("Relevant Tags", ["Food", "Drink", "Retail", "Service", "Discount", "Event"])
-            
-            if st.form_submit_button("Launch Promotion"):
-                promo_id = generate_id("promo")
-                promotions = load_db("promotions")
-                
-                businesses = load_db("businesses")
-                business_id = next(
-                    b["business_id"] for b in businesses.values() 
-                    if b["owner_id"] == st.session_state["user"]["user_id"]
-                )
-                
-                promotions[promo_id] = {
-                    "promo_id": promo_id,
-                    "business_id": business_id,
-                    "offer": offer,
-                    "description": description,
-                    "requirements": requirements,
-                   }
             start_date = st.date_input("Start Date")
             end_date = st.date_input("End Date")
             tags = st.multiselect("Relevant Tags", ["Food", "Drink", "Retail", "Service", "Discount", "Event"])
@@ -1078,3 +935,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
