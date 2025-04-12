@@ -542,7 +542,7 @@ def home_page():
         for circle in circles[:3]:  # Show first 3 circles
             card(
                 circle["name"],
-                f"Members: {len(circle['members']}\nType: {circle['type'].capitalize()}",
+                f"Members: {len(circle['members'])}\nType: {circle['type'].capitalize()}",
                 action_button="View Circle"
             )
     
