@@ -167,26 +167,27 @@ def load_css():
     }}
 
     /* Cards */
-    .card {{
-        border-radius: 12px;
-        box-shadow: 0 4px 8px 0 rgba(0,0,0,0.1);
-        padding: 20px;
-        margin-bottom: 25px;
-        background-color: white;
-        transition: transform 0.3s, box-shadow 0.3s;
-        border: 1px solid #e9ecef;
-    }}
+    .card {
+    background-color: white;
+    border-radius: 16px;
+    padding: 20px;
+    border: 1px solid #dee2e6;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
+}
+.card-title {
+    color: #4361ee;
+    margin-bottom: 12px;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
 
     .card:hover {{
         transform: translateY(-5px);
         box-shadow: 0 8px 16px 0 rgba(0,0,0,0.15);
     }}
 
-    .card-title {{
-        color: var(--primary);
-        margin-bottom: 15px;
-        font-size: 1.2rem;
-    }}
 
     /* Hero Section */
     .hero-container {{
@@ -357,49 +358,57 @@ def get_circle_events(circle_id):
 
 # ===== AUTHENTICATION PAGES =====
 def login_page():
-    """Modern login page design"""
+    """Beautifully styled landing/login page for Atmosphere"""
+
     st.markdown("""
-    <div class="auth-container">
-        <div class="branding-panel">
-            <h1>Welcome to Atmosphere</h1>
-            <p>Connect with your community and share your experiences</p>
-            <ul class="feature-list">
-                <li>Discover local events and activities</li>
-                <li>Join interest-based circles</li>
-                <li>Share moments with your network</li>
-                <li>Support local businesses</li>
-            </ul>
-        </div>
-        <div class="form-panel">
+        <h1 style='text-align: center; font-size: 3rem; color: #4361ee;'>Welcome to Atmosphere</h1>
+        <p style='text-align: center; font-size: 1.1rem; color: #495057; max-width: 700px; margin: auto;'>
+            A place to connect, explore, and grow through vibrant communities. Join circles that inspire you,
+            share your stories, and attend exciting events—right from where you are.
+        </p>
     """, unsafe_allow_html=True)
-    
-    # Login form
-    st.markdown("<h2>Login to Your Account</h2>", unsafe_allow_html=True)
-    
-    with st.form("login_form"):
-        username = st.text_input("Username", key="login_username")
-        password = st.text_input("Password", type="password", key="login_password")
-        login_btn = st.form_submit_button("Login")
-        
-        if login_btn:
-            users = load_db("users")
-            if username in users and verify_password(password, users[username]["password"]):
-                st.session_state["user"] = users[username]
-                st.session_state["logged_in"] = True
-                add_notification(users[username]["user_id"], "login", "Welcome back to Atmosphere!")
-                st.success("Login successful!")
-                time.sleep(1)
-                st.rerun()
-            else:
-                st.error("Invalid username or password")
-    
-    st.markdown("""
-    <div style="text-align: center; margin-top: 20px;">
-        <p>Don't have an account? <a href="#sign-up" onclick="window.location.hash='sign-up'">Sign up now</a></p>
-    </div>
-    </div>
-    </div>
-    """, unsafe_allow_html=True)
+
+    # Hero Banner Image
+    st.image("https://images.unsplash.com/photo-1469474968028-56623f02e42e", use_container_width=True, caption="Capture the vibe with Atmosphere")
+
+    st.markdown("---")
+
+    col1, col2 = st.columns([2, 1])
+
+    with col1:
+        st.subheader("🔐 Log In to Your Account")
+        with st.form("login_form"):
+            username = st.text_input("Username", key="login_username")
+            password = st.text_input("Password", type="password", key="login_password")
+            login_btn = st.form_submit_button("Login")
+
+            if login_btn:
+                users = load_db("users")
+                if username in users and verify_password(password, users[username]["password"]):
+                    st.session_state["user"] = users[username]
+                    st.session_state["logged_in"] = True
+                    add_notification(users[username]["user_id"], "login", "Welcome back to Atmosphere!")
+                    st.success("Login successful!")
+                    time.sleep(1)
+                    st.experimental_rerun()
+                else:
+                    st.error("Invalid username or password")
+
+    with col2:
+        st.markdown("""
+            <div class="card">
+                <h3 class="card-title">🌟 New to Atmosphere?</h3>
+                <ul style="list-style-type: none; padding-left: 0; font-size: 0.95rem;">
+                    <li>✅ Discover local events & activities</li>
+                    <li>🎨 Join interest-based circles</li>
+                    <li>📷 Share your experiences & moments</li>
+                    <li>🚀 Promote your business locally</li>
+                </ul>
+                <p style="margin-top: 10px;">Don't have an account?</p>
+                <a href="#sign-up" onclick="window.location.hash='sign-up'" style="color: #4361ee; font-weight: bold;">Sign up now →</a>
+            </div>
+        """, unsafe_allow_html=True)
+
 
 def signup_page():
     """Modern signup page design"""
