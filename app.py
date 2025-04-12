@@ -630,15 +630,16 @@ def media_page():
             # Add to database
             media = load_db("media")
             media.append({
-                "media_id": media_id,
-                "user_id": st.session_state["user"]["user_id"],
-                "file_path": filepath,
-                "location": {"name": location},
-                "timestamp": datetime.now().isoformat(),
-                "circle_id": next((c["circle_id"] for c in user_circles if c["name"] == selected_circle), 
-                "tags": tags,
-                "reports": []
-            )})
+    "media_id": media_id,
+    "user_id": st.session_state["user"]["user_id"],
+    "file_path": filepath,
+    "location": {"name": location},
+    "timestamp": datetime.now().isoformat(),
+    "circle_id": next((c["circle_id"] for c in user_circles if c["name"] == selected_circle), None), # Added None as default, and closed the next() call
+    "tags": tags,
+    "reports": []
+})
+           
             save_db("media", media)
             
             st.success("Media uploaded successfully!")
