@@ -710,38 +710,101 @@ def explore_page():
     with filter_col:
         filter_type = st.selectbox("Filter", ["All", "Circles", "Events", "Locations"])
     
-    # Map view
+    # Map view with location selector
     st.subheader("📍 Nearby Locations")
-    st.image("https://maps.googleapis.com/maps/api/staticmap?center=40.7128,-74.0060&zoom=12&size=800x300&markers=color:red%7C40.7128,-74.0060&key=YOUR_API_KEY", 
-             use_container_width=True, 
-             caption="Map of nearby locations with Atmosphere activity")
+    location = st.selectbox(
+        "Select Location",
+        ["New York", "Dubai", "London", "Tokyo"],
+        index=1  # Default to Dubai
+    )
     
-    # Popular circles
+    # Sample map images
+    map_images = {
+        "New York": "https://maps.googleapis.com/maps/api/staticmap?center=40.7128,-74.0060&zoom=12&size=800x300&markers=color:red%7C40.7128,-74.0060&key=YOUR_API_KEY",
+        "Dubai": "https://www.mapquest.com/dubai/dubai-282704697",
+        "London": "https://maps.googleapis.com/maps/api/staticmap?center=51.5074,-0.1278&zoom=12&size=800x300&markers=color:red%7C51.5074,-0.1278&key=YOUR_API_KEY",
+        "Tokyo": "https://maps.googleapis.com/maps/api/staticmap?center=35.6762,139.6503&zoom=12&size=800x300&markers=color:red%7C35.6762,139.6503&key=YOUR_API_KEY"
+    }
+    
+    st.image(map_images[location], 
+            use_container_width=True, 
+            caption=f"Map of {location} with popular locations")
+    
+    # Popular circles section with sample data
     st.subheader("👥 Popular Circles")
-    circles = list(load_db("circles").values())
-    if not circles:
-        st.info("No circles available yet. Be the first to create one!")
-    else:
-        for circle in circles[:3]:
-            card(
-                circle["name"],
-                circle["description"],
-                action_button="Join Circle"
-            )
     
-    # Upcoming events
+    circles_data = [
+        {
+            "name": "NYC Photographers",
+            "description": "For photography enthusiasts in NYC. Weekly photo walks and editing workshops.",
+            "members": 327,
+            "type": "public",
+            "image": "https://images.unsplash.com/photo-1496568816309-51d7c20e3b21?w=500"
+        },
+        {
+            "name": "Dubai Food Lovers",
+            "description": "Discover hidden culinary gems across Dubai. Restaurant reviews and food tours.",
+            "members": 215,
+            "type": "public",
+            "image": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=500"
+        },
+        {
+            "name": "Tech Entrepreneurs UAE",
+            "description": "Network with startup founders and tech professionals in the UAE.",
+            "members": 183,
+            "type": "private",
+            "image": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=500"
+        }
+    ]
+    
+    for circle in circles_data:
+        card(
+            circle["name"],
+            f"{circle['description']}\n\n👥 {circle['members']} members | 🔓 {circle['type'].capitalize()}",
+            image=circle["image"],
+            action_button="Join Circle"
+        )
+    
+    # Upcoming events section with sample data
     st.subheader("📅 Upcoming Events")
-    events = list(load_db("events").values())
-    if not events:
-        st.info("No events scheduled yet. Check back later!")
-    else:
-        for event in events[:3]:
-            card(
-                event["name"],
-                f"📅 {event['date']} at {event['time']}\n📍 {event['location']['name']}",
-                action_button="View Details"
-            )
-
+    
+    events_data = [
+        {
+            "name": "Sunset Photography at Burj Khalifa",
+            "date": "2025-04-15",
+            "time": "17:30",
+            "location": "Burj Khalifa, Dubai",
+            "description": "Capture stunning sunset views from the world's tallest building. Tripods recommended.",
+            "image": "https://images.unsplash.com/photo-1518684079-3c830dcef090?w=500"
+        },
+        {
+            "name": "Dubai Marina Food Tour",
+            "date": "2025-04-18",
+            "time": "19:00",
+            "location": "Dubai Marina Walk",
+            "description": "Sample cuisine from 5 different restaurants along the marina.",
+            "image": "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=500"
+        },
+        {
+            "name": "Startup Pitch Night",
+            "date": "2025-04-22",
+            "time": "18:30",
+            "location": "DIFC Innovation Hub",
+            "description": "Watch 10 emerging startups pitch to investors. Networking drinks included.",
+            "image": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=500"
+        }
+    ]
+    
+    for event in events_data:
+        card(
+            event["name"],
+            f"""📅 {event['date']} at {event['time']}
+            📍 {event['location']}
+            
+            {event['description']}""",
+            image=event["image"],
+            action_button="RSVP"
+        )
 def media_page():
     """Media upload and gallery page"""
     st.title("📸 Capture & Share Your Moments")
