@@ -289,10 +289,11 @@ def activity_item(user, action, time_ago):
 # ===== DATABASE FUNCTIONS =====
 def init_db():
     """Initialize database files with empty structures"""
-    for file, _ in DB_FILES.items():
-        if not os.path.exists(file):
-            with open(file, "w") as f:
-                if file in ["users", "businesses", "circles", "notifications"]:
+    for file_key in DB_FILES:
+        file_path = DB_FILES[file_key]
+        if not os.path.exists(file_path):
+            with open(file_path, "w") as f:
+                if file_key in ["users", "businesses", "circles", "notifications"]:
                     json.dump({}, f)
                 else:
                     json.dump([], f)
@@ -388,7 +389,7 @@ def login_page():
                 add_notification(users[username]["user_id"], "login", "Welcome back to Atmosphere!")
                 st.success("Login successful!")
                 time.sleep(1)
-                st.experimental_rerun()
+                st.rerun()
             else:
                 st.error("Invalid username or password")
     
@@ -468,7 +469,6 @@ def signup_page():
                         st.session_state["logged_in"] = True
                         st.success("Account created successfully!")
                         time.sleep(1)
-                        # Use st.rerun() instead of st.experimental_rerun()
                         st.rerun()
     
     with tab2:
@@ -530,7 +530,6 @@ def signup_page():
                         st.session_state["logged_in"] = True
                         st.success("Business account created! Verification pending.")
                         time.sleep(1)
-                        # Use st.rerun() instead of st.experimental_rerun()
                         st.rerun()
     
     st.markdown("""
@@ -540,6 +539,7 @@ def signup_page():
     </div>
     </div>
     """, unsafe_allow_html=True)
+
 # ===== MAIN APP PAGES =====
 def home_page():
     """Home page with user dashboard"""
@@ -729,14 +729,14 @@ def circles_page():
                     with col1:
                         if st.button("View Posts", key=f"posts_{circle['circle_id']}"):
                             st.session_state["current_circle"] = circle['circle_id']
-                            st.experimental_rerun()
+                            st.rerun()
                     with col2:
                         if st.button("Leave Circle", key=f"leave_{circle['circle_id']}"):
                             circles = load_db("circles")
                             circles[circle["circle_id"]]["members"].remove(st.session_state["user"]["user_id"])
                             save_db("circles", circles)
                             st.success(f"You left {circle['name']}")
-                            st.experimental_rerun()
+                            st.rerun()
     
     with tab2:
         st.subheader("Discover New Circles")
@@ -790,7 +790,7 @@ def circles_page():
                         f"You created a new circle: {name}"
                     )
                     time.sleep(1)
-                    st.experimental_rerun()
+                    st.rerun()
 
 def events_page():
     """Events management page"""
@@ -897,7 +897,7 @@ def events_page():
                                 )
                         
                         time.sleep(1)
-                        st.experimental_rerun()
+                        st.rerun()
 
 def business_page():
     """Business dashboard page"""
@@ -946,6 +946,27 @@ def business_page():
             offer = st.text_input("Offer (e.g., '20% off')")
             description = st.text_area("Promotion Details")
             requirements = st.text_input("Requirements (e.g., 'Post 3 photos with #OurBusiness')")
+            start_date = st.date_input("Start Date")
+            end_date = st.date_input("End Date")
+            tags = st.multiselect("Relevant Tags", ["Food", "Drink", "Retail", "Service", "Discount", "Event"])
+            
+            if st.form_submit_button("Launch Promotion"):
+                promo_id = generate_id("promo")
+                promotions = load_db("promotions")
+                
+                businesses = load_db("businesses")
+                business_id = next(
+                    b["business_id"] for b in businesses.values() 
+                    if b["owner_id"] == st.session_state["user"]["user_id"]
+                )
+                
+                promotions[promo_id] = {
+                    "promo_id": promo_id,
+                    "business_id": business_id,
+                    "offer": offer,
+                    "description": description,
+                    "requirements": requirements,
+                   
             start_date = st.date_input("Start Date")
             end_date = st.date_input("End Date")
             tags = st.multiselect("Relevant Tags", ["Food", "Drink", "Retail", "Service", "Discount", "Event"])
