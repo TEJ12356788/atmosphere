@@ -642,10 +642,10 @@ def media_page():
                 "file_path": filepath,
                 "location": {"name": location},
                 "timestamp": datetime.now().isoformat(),
-                "circle_id": next((c["circle_id"] for c in user_circles if c["name"] == selected_circle), 
+                "circle_id": next((c["circle_id"] for c in user_circles if c["name"] == selected_circle), None),
                 "tags": tags,
                 "reports": []
-            )})
+            })
             save_db("media", media)
             
             st.success("Media uploaded successfully!")
