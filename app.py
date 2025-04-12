@@ -132,6 +132,43 @@ def load_css():
             margin-bottom: 15px;
         }}
     }}
+    st.markdown(f"""
+    <style>
+    /* Add these new styles */
+    .stats-card {
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 15px;
+        background-color: white;
+        box-shadow: 0 4px 8px 0 rgba(0,0,0,0.1);
+        border: 1px solid #e9ecef;
+        text-align: center;
+    }
+    .stats-card h3 {
+        color: #6c757d;
+        font-size: 1rem;
+        margin-bottom: 5px;
+    }
+    .stats-card .value {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #4361ee;
+        margin: 10px 0;
+    }
+    .activity-tab {
+        border-bottom: 1px solid #dee2e6;
+        padding-bottom: 10px;
+        margin-bottom: 15px;
+    }
+    .activity-item {
+        padding: 12px 0;
+        border-bottom: 1px solid #f1f1f1;
+    }
+    .activity-time {
+        color: #6c757d;
+        font-size: 0.8rem;
+        margin-top: 5px;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -168,6 +205,14 @@ def activity_item(user, action, time_ago):
     <div class="activity-item">
         <strong>{user}</strong> {action}
         <div class="activity-time">{time_ago}</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+def stats_card(title, value):
+    st.markdown(f"""
+    <div class="stats-card">
+        <h3>{title}</h3>
+        <div class="value">{value}</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -464,7 +509,7 @@ def login_page():
     with col2:
         st.markdown("""
             <div class="card">
-                <h3 class="card-title">🌞 New to Atmosphere?</h3>
+                <h3 class="card-title" style="color: #212529;">🌞 New to Atmosphere?</h3>
                 <ul style="list-style-type: none; padding-left: 0; font-size: 0.95rem; color: #212529;">
                     <li>✅ Discover local events & activities</li>
                     <li>🎨 Join interest-based circles</li>
@@ -599,59 +644,69 @@ def home_page():
     
     col1, col2, col3 = st.columns(3)
     with col1:
-        card("Circles Joined", str(len(user_circles)) or "0")
+        stats_card("Circles Joined", str(len(user_circles)) or "0")
     with col2:
-        card("Events Available", str(user_events) or "0")
+        stats_card("Events Available", str(user_events) or "0")
     with col3:
-        card("Media Shared", str(user_media) or "0")
+        stats_card("Media Shared", str(user_media) or "0")
     
     # Activity feed
-    st.subheader("📰 Your Activity Feed")
+    st.markdown("## 📰 Your Activity Feed")
     tab1, tab2, tab3 = st.tabs(["Recent Activity", "Your Circles", "Upcoming Events"])
     
     with tab1:
+        st.markdown('<div class="activity-tab">Recent Activity</div>', unsafe_allow_html=True)
         notifications = load_db("notifications").get(st.session_state["user"]["user_id"], [])
+        
         if not notifications:
-            activities = [
-                {"user": "JaneDoe", "action": "posted a photo in NYC Photographers", "time": "2h ago"},
-                {"user": "MikeT", "action": "created an event: Central Park Picnic", "time": "5h ago"},
-                {"user": "CoffeeShop", "action": "offered 20% off for photos", "time": "1d ago"}
-            ]
-            for activity in activities:
-                activity_item(activity["user"], activity["action"], activity["time"])
+            st.info("No recent activity")
         else:
             for notif in notifications[:3]:
-                activity_item("System", notif["content"], 
-                            datetime.fromisoformat(notif["timestamp"]).strftime("%b %d, %H:%M"))
+                st.markdown(f"""
+                <div class="activity-item">
+                    <div>System: {notif['content']}</div>
+                    <div class="activity-time">
+                        {datetime.fromisoformat(notif['timestamp']).strftime('%b %d, %H:%M')}
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
     
     with tab2:
+        st.markdown('<div class="activity-tab">Your Circles</div>', unsafe_allow_html=True)
         circles = user_circles[:3]
         if not circles:
-            st.info("You haven't joined any circles yet. Explore some in the Circles tab!")
+            st.info("You haven't joined any circles yet")
         else:
             for circle in circles:
-                card(
-                    circle["name"],
-                    f"Members: {len(circle['members'])}\nType: {circle['type'].capitalize()}",
-                    action_button="View Circle"
-                )
+                st.markdown(f"""
+                <div class="activity-item">
+                    <div><strong>{circle['name']}</strong></div>
+                    <div class="activity-time">
+                        {len(circle['members'])} members • {circle['type'].capitalize()}
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
     
     with tab3:
+        st.markdown('<div class="activity-tab">Upcoming Events</div>', unsafe_allow_html=True)
         events = []
         for circle in user_circles:
             events.extend(get_circle_events(circle["circle_id"]))
         
         events = sorted(events, key=lambda x: x["date"])[:3]
         if not events:
-            st.info("No upcoming events in your circles. Check back later!")
+            st.info("No upcoming events")
         else:
             for event in events:
-                card(
-                    event["name"],
-                    f"📅 {event['date']} at {event['time']}\n📍 {event['location']['name']}",
-                    action_button="RSVP"
-                )
-
+                st.markdown(f"""
+                <div class="activity-item">
+                    <div><strong>{event['name']}</strong></div>
+                    <div>{event['date']} at {event['time']}</div>
+                    <div class="activity-time">
+                        {event['location']['name']}
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
 def explore_page():
     """Explore page to discover content"""
     generate_sample_data()
