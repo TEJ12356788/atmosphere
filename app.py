@@ -938,3 +938,77 @@ def business_page():
                 }
                 save_db("promotions", promotions)
                 st.success("Promotion launched successfully!")
+# ===== MAIN APP FUNCTION =====
+def main():
+    """Main application function"""
+    # Initialize session state
+    if "logged_in" not in st.session_state:
+        st.session_state["logged_in"] = False
+    if "current_page" not in st.session_state:
+        st.session_state["current_page"] = "Home"
+    
+    # Load CSS
+    load_css()
+    
+    # Sidebar navigation
+    if st.session_state["logged_in"]:
+        with st.sidebar:
+            st.image("https://via.placeholder.com/150x50?text=Atmosphere", width=150)
+            st.markdown(f"**Welcome, {st.session_state['user']['full_name'].split()[0]}!**")
+            
+            # Navigation menu
+            menu_options = {
+                "Home": "🏠",
+                "Explore": "🔍",
+                "Media": "📸",
+                "Circles": "👥",
+                "Events": "📅",
+                "Business": "💼" if st.session_state["user"]["account_type"] == "business" else None
+            }
+            
+            # Filter out None values (like Business for non-business accounts)
+            menu_options = {k: v for k, v in menu_options.items() if v is not None}
+            
+            for page, icon in menu_options.items():
+                if st.button(f"{icon} {page}"):
+                    st.session_state["current_page"] = page
+            
+            st.markdown("---")
+            if st.button("🚪 Logout"):
+                st.session_state["logged_in"] = False
+                st.session_state["user"] = None
+                st.session_state["current_page"] = "Home"
+                st.experimental_rerun()
+            
+            # User profile
+            st.markdown("---")
+            st.image(st.session_state["user"].get("profile_pic", "https://via.placeholder.com/150"), width=60)
+            st.caption(st.session_state["user"]["full_name"])
+    
+    # Page routing
+    if not st.session_state["logged_in"]:
+        # Authentication pages
+        st.sidebar.title("Atmosphere")
+        auth_tab = st.sidebar.radio("Navigation", ["Login", "Sign Up"])
+        
+        if auth_tab == "Login":
+            login_page()
+        else:
+            signup_page()
+    else:
+        # Main app pages
+        if st.session_state["current_page"] == "Home":
+            home_page()
+        elif st.session_state["current_page"] == "Explore":
+            explore_page()
+        elif st.session_state["current_page"] == "Media":
+            media_page()
+        elif st.session_state["current_page"] == "Circles":
+            circles_page()
+        elif st.session_state["current_page"] == "Events":
+            events_page()
+        elif st.session_state["current_page"] == "Business":
+            business_page()
+
+if __name__ == "__main__":
+    main()
