@@ -638,7 +638,7 @@ def media_page():
                 "circle_id": next((c["circle_id"] for c in user_circles if c["name"] == selected_circle), 
                 "tags": tags,
                 "reports": []
-            })
+            ))
             save_db("media", media)
             
             st.success("Media uploaded successfully!")
