@@ -975,7 +975,7 @@ def business_page():
                     "offer": offer,
                     "description": description,
                     "requirements": requirements,
-                   
+                   }
             start_date = st.date_input("Start Date")
             end_date = st.date_input("End Date")
             tags = st.multiselect("Relevant Tags", ["Food", "Drink", "Retail", "Service", "Discount", "Event"])
