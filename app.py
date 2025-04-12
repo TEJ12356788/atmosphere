@@ -468,7 +468,8 @@ def signup_page():
                         st.session_state["logged_in"] = True
                         st.success("Account created successfully!")
                         time.sleep(1)
-                        st.experimental_rerun()
+                        # Use st.rerun() instead of st.experimental_rerun()
+                        st.rerun()
     
     with tab2:
         with st.form("business_signup"):
@@ -529,7 +530,8 @@ def signup_page():
                         st.session_state["logged_in"] = True
                         st.success("Business account created! Verification pending.")
                         time.sleep(1)
-                        st.experimental_rerun()
+                        # Use st.rerun() instead of st.experimental_rerun()
+                        st.rerun()
     
     st.markdown("""
     <div style="text-align: center; margin-top: 20px;">
@@ -538,7 +540,6 @@ def signup_page():
     </div>
     </div>
     """, unsafe_allow_html=True)
-
 # ===== MAIN APP PAGES =====
 def home_page():
     """Home page with user dashboard"""
