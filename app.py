@@ -517,7 +517,7 @@ def home_page():
     # User stats
     col1, col2, col3 = st.columns(3)
     with col1:
-        card("Circles Joined", str(len(get_user_circles(st.session_state["user"]["user_id"])))
+        card("Circles Joined", str(len(get_user_circles(st.session_state["user"]["user_id"]))))
     with col2:
         user_events = sum(len(get_circle_events(c["circle_id"])) for c in get_user_circles(st.session_state["user"]["user_id"]))
         card("Events Available", str(user_events))
