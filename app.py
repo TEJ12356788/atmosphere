@@ -976,41 +976,90 @@ def events_page():
     
     with tab1:
         st.subheader("Upcoming Events")
-        all_events = load_db("events")
-        upcoming_events = sorted(
-            [e for e in all_events.values() if e["date"] >= datetime.now().strftime("%Y-%m-%d")],
-            key=lambda x: x["date"]
-        )
+        
+        # Sample upcoming events data
+        upcoming_events = [
+            {
+                "name": "Sunset Photography Meetup",
+                "date": "2025-04-15",
+                "time": "18:00",
+                "location": "Brooklyn Bridge, New York",
+                "attendees": 12,
+                "capacity": 20,
+                "organizer": "Jane Doe",
+                "description": "Capture stunning sunset views from Brooklyn Bridge. All skill levels welcome!",
+                "image": "https://images.unsplash.com/photo-1496568816309-51d7c20e3b21?w=500"
+            },
+            {
+                "name": "Downtown Food Tour",
+                "date": "2025-04-18",
+                "time": "19:00",
+                "location": "Lower Manhattan",
+                "attendees": 8,
+                "capacity": 15,
+                "organizer": "Mike Chen",
+                "description": "Explore hidden culinary gems in downtown NYC",
+                "image": "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=500"
+            },
+            {
+                "name": "Tech Startup Mixer",
+                "date": "2025-04-20",
+                "time": "19:30",
+                "location": "WeWork Soho",
+                "attendees": 25,
+                "capacity": 50,
+                "organizer": "Alex Johnson",
+                "description": "Network with fellow tech entrepreneurs and investors",
+                "image": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=500"
+            }
+        ]
         
         if not upcoming_events:
             st.info("No upcoming events at the moment. Check back later!")
         else:
-            for event in upcoming_events[:5]:
+            for event in upcoming_events:
                 card(
                     event["name"],
                     f"""📅 {event['date']} at {event['time']}
-                    📍 {event['location']['name']}
-                    👥 {len(event['attendees'])} attending
-                    Organized by: {event['organizer']}""",
+                    📍 {event['location']}
+                    👥 {event['attendees']}/{event['capacity']} attending
+                    🎫 Organized by: {event['organizer']}
+                    
+                    {event['description']}""",
+                    image=event["image"],
                     action_button="RSVP"
                 )
     
     with tab2:
-        st.subheader("Events You're Attending")
-        user_events = []
-        all_events = load_db("events")
-        for event in all_events.values():
-            if st.session_state["user"]["user_id"] in event["attendees"]:
-                user_events.append(event)
+        st.subheader("Your Events")
         
-        if not user_events:
+        # Sample events you're attending
+        your_events = [
+            {
+                "name": "Sunset Photography Meetup",
+                "date": "2025-04-15",
+                "time": "18:00",
+                "status": "Confirmed",
+                "organizer": "Jane Doe"
+            },
+            {
+                "name": "Central Park Picnic",
+                "date": "2025-04-10",
+                "time": "12:00",
+                "status": "Completed",
+                "organizer": "Sarah Williams"
+            }
+        ]
+        
+        if not your_events:
             st.info("You're not attending any events yet. Explore upcoming events!")
         else:
-            for event in user_events:
+            for event in your_events:
                 card(
                     event["name"],
                     f"""📅 {event['date']} at {event['time']}
-                    Status: {"Confirmed" if event['date'] >= datetime.now().strftime("%Y-%m-%d") else "Past Event"}""",
+                    🎫 Organized by: {event['organizer']}
+                    🟢 Status: {event['status']}""",
                     action_button="View Details"
                 )
     
@@ -1030,52 +1079,14 @@ def events_page():
                 circle = st.selectbox(
                     "Associated Circle",
                     [c["name"] for c in user_circles]
-               
                 )
                 capacity = st.number_input("Capacity (0 for unlimited)", min_value=0)
                 
                 if st.form_submit_button("Create Event"):
                     if name:
-                        event_id = generate_id("evt")
-                        events = load_db("events")
-                        circle_id = next(c["circle_id"] for c in user_circles if c["name"] == circle)
-                        
-                        events[event_id] = {
-                            "event_id": event_id,
-                            "name": name,
-                            "description": description,
-                            "date": date.strftime("%Y-%m-%d"),
-                            "time": str(time),
-                            "location": {"name": location},
-                            "organizer": st.session_state["user"]["user_id"],
-                            "circle_id": circle_id,
-                            "capacity": capacity,
-                            "attendees": [st.session_state["user"]["user_id"]],
-                            "tags": [],
-                            "created_at": datetime.now().isoformat()
-                        }
-                        save_db("events", events)
-                        
-                        # Add to circle's events list
-                        circles = load_db("circles")
-                        circles[circle_id]["events"].append(event_id)
-                        save_db("circles", circles)
-                        
                         st.success(f"Event '{name}' created successfully!")
-                        
-                        # Notify circle members
-                        for member in circles[circle_id]["members"]:
-                            if member != st.session_state["user"]["user_id"]:
-                                add_notification(
-                                    member,
-                                    "event",
-                                    f"New event in {circle}: {name}",
-                                    event_id
-                                )
-                        
                         time.sleep(1)
                         st.rerun()
-
 def business_page():
     """Business dashboard page"""
     if st.session_state["user"]["account_type"] != "business":
