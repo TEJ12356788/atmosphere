@@ -10,63 +10,144 @@ import uuid
 
 # ===== CSS STYLING SECTION =====
 def load_css():
-    st.markdown("""
+    """Define all CSS styling for the application"""
+    st.markdown(f"""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-
-    html, body, [class*="css"] {
-        font-family: 'Inter', sans-serif;
-        background-color: #f8f9fa;
-        color: #212529;
-    }
-
-    .card {
-        background-color: #ffffff;
-        border-radius: 16px;
+    /* Color Variables */
+    :root {{
+        --primary: #4361ee;
+        --secondary: #3f37c9;
+        --accent: #4895ef;
+        --light: #f8f9fa;
+        --dark: #212529;
+        --success: #4cc9f0;
+        --warning: #f72585;
+        --danger: #7209b7;
+    }}
+    
+    /* Base Styles */
+    body {{
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+        color: var(--dark);
+    }}
+    
+    /* Main Containers */
+    .main-container {{
+        max-width: 1200px;
+        margin: 0 auto;
         padding: 20px;
-        border: 1px solid #dee2e6;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-        margin-bottom: 20px;
-    }
-
-    .card-title {
-        color: #4361ee;
-        margin-bottom: 12px;
+    }}
+    
+    /* Cards */
+    .card {{
+        border-radius: 12px;
+        box-shadow: 0 4px 8px 0 rgba(0,0,0,0.1);
+        padding: 20px;
+        margin-bottom: 25px;
+        background-color: white;
+        transition: transform 0.3s, box-shadow 0.3s;
+        border: 1px solid #e9ecef;
+    }}
+    .card:hover {{
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px 0 rgba(0,0,0,0.15);
+    }}
+    .card-title {{
+        color: var(--primary);
+        margin-bottom: 15px;
         font-size: 1.2rem;
-        font-weight: 600;
-    }
-
-    .stButton>button {
-        background-color: #4361ee;
-        color: white;
-        padding: 10px 20px;
-        font-weight: 600;
+    }}
+    
+    /* Buttons */
+    .stButton>button {{
         border-radius: 8px;
+        padding: 8px 16px;
+        background-color: var(--primary);
+        color: white;
         border: none;
-        transition: background-color 0.3s ease;
-    }
-
-    .stButton>button:hover {
-        background-color: #3f37c9;
-    }
-
-    .hero-title {
-        font-size: 2.8rem;
-        font-weight: 700;
-        color: #4361ee;
+        transition: background-color 0.3s;
+    }}
+    .stButton>button:hover {{
+        background-color: var(--secondary);
+    }}
+    
+    /* Forms */
+    .stTextInput>div>div>input, 
+    .stTextArea>div>textarea {{
+        border-radius: 8px;
+        border: 1px solid #ced4da;
+    }}
+    .stSelectbox>div>div>div {{
+        border-radius: 8px;
+    }}
+    
+    /* Navigation */
+    .sidebar .sidebar-content {{
+        background-color: var(--light);
+        padding: 15px;
+    }}
+    .sidebar .sidebar-content .block-container {{
+        padding-top: 0;
+    }}
+    
+    /* Hero Section */
+    .hero-container {{
+        position: relative;
         text-align: center;
+        margin-bottom: 30px;
+    }}
+    .hero-text {{
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }}
+    .hero-title {{
+        font-size: 2.5rem;
         margin-bottom: 10px;
-    }
-
-    .hero-subtitle {
-        font-size: 1.1rem;
-        color: #495057;
-        text-align: center;
-        max-width: 700px;
-        margin: auto;
-        margin-bottom: 20px;
-    }
+    }}
+    
+    /* Activity Feed Items */
+    .activity-item {{
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        border-left: 4px solid var(--accent);
+    }}
+    .activity-time {{
+        color: #6c757d;
+        font-size: 0.8rem;
+    }}
+    
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {{
+        .hero-title {{
+            font-size: 1.8rem;
+        }}
+        .card {{
+            margin-bottom: 15px;
+        }}
+    }}
     </style>
+    """, unsafe_allow_html=True)
+
+# ===== HTML COMPONENTS SECTION =====
+def card(title, content, image=None, action_button=None):
+    """Reusable card component with optional image and action button"""
+    img_html = f'<img src="{image}" style="width:100%; border-radius:8px; margin-bottom:15px;">' if image else ''
+    button_html = f'<button class="card-button">{action_button}</button>' if action_button else ''
+    
+    st.markdown(f"""
+    <div class="card">
+        <div class="card-title">{title}</div>
+        {img_html}
+        <div class="card-content">{content}</div>
+        {button_html}
+    </div>
     """, unsafe_allow_html=True)
 
 def hero_section(title, subtitle, image_url):
@@ -280,10 +361,10 @@ def get_circle_events(circle_id):
 # ===== AUTHENTICATION PAGES =====
 def login_page():
     st.markdown("""
-        <h1 style='text-align: center; font-size: 3rem; color: #4361ee;'>Welcome to Atmosphere</h1>
-        <p style='text-align: center; font-size: 1.1rem; color: #495057; max-width: 700px; margin: auto;'>
-            A place to connect, explore, and grow through vibrant communities. Join circles that inspire you,
-            share your stories, and attend exciting events—right from where you are.
+        <h1 class='hero-title'>Welcome to Atmosphere</h1>
+        <p class='hero-subtitle'>
+            Your digital space to connect with like-minded individuals, explore engaging events, 
+            and share your stories within interest-based circles. Dive in and discover a vibrant, interactive community.
         </p>
     """, unsafe_allow_html=True)
 
@@ -297,28 +378,31 @@ def login_page():
             username = st.text_input("Username", key="login_username")
             password = st.text_input("Password", type="password", key="login_password")
             login_btn = st.form_submit_button("Login")
-            if login_btn:
-                users = load_db("users")
-                if username in users and verify_password(password, users[username]["password"]):
-                    st.session_state["user"] = users[username]
-                    st.session_state["logged_in"] = True
-                    add_notification(users[username]["user_id"], "login", "Welcome back to Atmosphere!")
-                    st.success("Login successful!")
-                    time.sleep(1)
-                    st.experimental_rerun()
-                else:
-                    st.error("Invalid username or password")
+            try:
+                if login_btn:
+                    users = load_db("users")
+                    if username in users and verify_password(password, users[username]["password"]):
+                        st.session_state["user"] = users[username]
+                        st.session_state["logged_in"] = True
+                        add_notification(users[username]["user_id"], "login", "Welcome back to Atmosphere!")
+                        st.success("Login successful!")
+                        time.sleep(1)
+                        st.experimental_rerun()
+                    else:
+                        st.error("Invalid username or password")
+            except Exception as e:
+                st.error(f"Something went wrong: {e}")
     with col2:
         st.markdown("""
             <div class="card">
-                <h3 class="card-title">🌟 New to Atmosphere?</h3>
-                <ul style="list-style-type: none; padding-left: 0; font-size: 0.95rem;">
+                <h3 class="card-title">🌞 New to Atmosphere?</h3>
+                <ul style="list-style-type: none; padding-left: 0; font-size: 0.95rem; color: #212529;">
                     <li>✅ Discover local events & activities</li>
                     <li>🎨 Join interest-based circles</li>
                     <li>📷 Share your experiences & moments</li>
                     <li>🚀 Promote your business locally</li>
                 </ul>
-                <p style="margin-top: 10px;">Don't have an account?</p>
+                <p style="margin-top: 10px; color: #212529;">Don't have an account?</p>
                 <a href="#sign-up" onclick="window.location.hash='sign-up'" style="color: #4361ee; font-weight: bold;">Sign up now →</a>
             </div>
         """, unsafe_allow_html=True)
@@ -558,10 +642,10 @@ def media_page():
                 "file_path": filepath,
                 "location": {"name": location},
                 "timestamp": datetime.now().isoformat(),
-                "circle_id": next((c["circle_id"] for c in user_circles if c["name"] == selected_circle), None),
+                "circle_id": next((c["circle_id"] for c in user_circles if c["name"] == selected_circle), 
                 "tags": tags,
                 "reports": []
-            })
+            )})
             save_db("media", media)
             
             st.success("Media uploaded successfully!")
@@ -935,4 +1019,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
