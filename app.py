@@ -8,7 +8,6 @@ from PIL import Image
 import random
 import uuid
 
-# ===== CSS STYLING SECTION =====
 def load_css():
     """Define all CSS styling for the application"""
     st.markdown(f"""
@@ -57,6 +56,28 @@ def load_css():
         color: var(--primary);
         margin-bottom: 15px;
         font-size: 1.2rem;
+    }}
+    
+    /* Stats Cards */
+    .stats-card {{
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 15px;
+        background-color: white;
+        box-shadow: 0 4px 8px 0 rgba(0,0,0,0.1);
+        border: 1px solid #e9ecef;
+        text-align: center;
+    }}
+    .stats-card h3 {{
+        color: #6c757d;
+        font-size: 1rem;
+        margin-bottom: 5px;
+    }}
+    .stats-card .value {{
+        font-size: 2rem;
+        font-weight: bold;
+        color: #4361ee;
+        margin: 10px 0;
     }}
     
     /* Buttons */
@@ -123,6 +144,13 @@ def load_css():
         font-size: 0.8rem;
     }}
     
+    /* Activity Tabs */
+    .activity-tab {{
+        border-bottom: 1px solid #dee2e6;
+        padding-bottom: 10px;
+        margin-bottom: 15px;
+    }}
+    
     /* Responsive Adjustments */
     @media (max-width: 768px) {{
         .hero-title {{
@@ -132,43 +160,6 @@ def load_css():
             margin-bottom: 15px;
         }}
     }}
-    st.markdown(f"""
-    <style>
-    /* Add these new styles */
-    .stats-card {
-        border-radius: 12px;
-        padding: 20px;
-        margin-bottom: 15px;
-        background-color: white;
-        box-shadow: 0 4px 8px 0 rgba(0,0,0,0.1);
-        border: 1px solid #e9ecef;
-        text-align: center;
-    }
-    .stats-card h3 {
-        color: #6c757d;
-        font-size: 1rem;
-        margin-bottom: 5px;
-    }
-    .stats-card .value {
-        font-size: 2rem;
-        font-weight: bold;
-        color: #4361ee;
-        margin: 10px 0;
-    }
-    .activity-tab {
-        border-bottom: 1px solid #dee2e6;
-        padding-bottom: 10px;
-        margin-bottom: 15px;
-    }
-    .activity-item {
-        padding: 12px 0;
-        border-bottom: 1px solid #f1f1f1;
-    }
-    .activity-time {
-        color: #6c757d;
-        font-size: 0.8rem;
-        margin-top: 5px;
-    }
     </style>
     """, unsafe_allow_html=True)
 
