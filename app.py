@@ -361,15 +361,26 @@ def get_circle_events(circle_id):
 # ===== AUTHENTICATION PAGES =====
 def login_page():
     """Login page with form and welcome content"""
-    st.title("🔑 Welcome Back to Atmosphere")
-    
-    col1, col2 = st.columns([1, 2])
+    # Use columns to create a split layout
+    col1, col2 = st.columns([1, 1], gap="large")
     
     with col1:
+        # Login Form Card
+        st.markdown("""
+        <div style='background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1)'>
+            <h2 style='color: #4361ee; margin-bottom: 1.5rem; text-align: center;'>Welcome Back</h2>
+        """, unsafe_allow_html=True)
+        
         with st.form("login_form"):
             username = st.text_input("Username", key="login_username")
             password = st.text_input("Password", type="password", key="login_password")
-            login_btn = st.form_submit_button("Login")
+            
+            # Flex container for the button
+            st.markdown("""
+            <div style='display: flex; justify-content: center; margin-top: 1.5rem;'>
+            """, unsafe_allow_html=True)
+            login_btn = st.form_submit_button("Login", type="primary")
+            st.markdown("</div>", unsafe_allow_html=True)
             
             if login_btn:
                 users = load_db("users")
@@ -382,70 +393,223 @@ def login_page():
                     st.experimental_rerun()
                 else:
                     st.error("Invalid username or password")
+        
+        st.markdown("</div>", unsafe_allow_html=True)  # Close card div
+        
+        # Forgot password link
+        st.markdown("""
+        <div style='text-align: center; margin-top: 1rem;'>
+            <a href='#' style='color: #4361ee; text-decoration: none;'>Forgot password?</a>
+        </div>
+        """, unsafe_allow_html=True)
 
     with col2:
-        st.image("https://images.unsplash.com/photo-1531058020387-3be344556be6", 
-                use_container_width=True, 
-                caption="Join our community")
+        # Welcome Content Card
         st.markdown("""
-        <div style="padding:20px;">
-            <h3>New to Atmosphere?</h3>
-            <ul style="list-style-type:none; padding-left:0;">
-                <li>🌍 Connect with like-minded people</li>
-                <li>📸 Share your experiences</li>
-                <li>🎉 Discover local events</li>
-                <li>💼 Grow your business</li>
-            </ul>
-            <p>Don't have an account? <a href="#sign-up" onclick="window.location.hash='sign-up'">Sign up now</a></p>
+        <div style='background: #f8f9fa; padding: 2rem; border-radius: 12px; height: 100%;'>
+            <h2 style='color: #4361ee; margin-bottom: 1rem;'>New to Atmosphere?</h2>
+            <p style='color: #6c757d; margin-bottom: 1.5rem;'>Join our community of like-minded people</p>
+            
+            <div style='margin-bottom: 2rem;'>
+                <div style='display: flex; align-items: center; margin-bottom: 1rem;'>
+                    <span style='background: #4361ee; color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; margin-right: 1rem;'>1</span>
+                    <span>Connect with people in your area</span>
+                </div>
+                <div style='display: flex; align-items: center; margin-bottom: 1rem;'>
+                    <span style='background: #4361ee; color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; margin-right: 1rem;'>2</span>
+                    <span>Share your experiences</span>
+                </div>
+                <div style='display: flex; align-items: center; margin-bottom: 1.5rem;'>
+                    <span style='background: #4361ee; color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; margin-right: 1rem;'>3</span>
+                    <span>Discover local events</span>
+                </div>
+            </div>
+            
+            <div style='text-align: center;'>
+                <a href='#sign-up' style='background: white; color: #4361ee; border: 1px solid #4361ee; padding: 0.5rem 1rem; border-radius: 8px; text-decoration: none; display: inline-block;'>Create Account</a>
+            </div>
         </div>
         """, unsafe_allow_html=True)
 
 def signup_page():
     """Signup page with tabs for different account types"""
-    st.title("🆕 Join Our Community")
+    # Use columns to create a split layout
+    col1, col2 = st.columns([1.5, 1], gap="large")
     
-    tab1, tab2 = st.tabs(["👤 General User", "💼 Business Account"])
-    
-    with tab1:
-        with st.form("general_signup"):
-            st.subheader("Create Personal Account")
-            full_name = st.text_input("Full Name")
-            username = st.text_input("Username")
-            email = st.text_input("Email")
-            password = st.text_input("Password", type="password")
-            confirm_password = st.text_input("Confirm Password", type="password")
-            location = st.text_input("Your Location (City)")
-            interests = st.multiselect("Your Interests", ["Art", "Music", "Sports", "Food", "Tech", "Nature"])
-            
-            signup_btn = st.form_submit_button("Create Account")
-            
-            if signup_btn:
-                if password != confirm_password:
-                    st.error("Passwords don't match!")
-                else:
-                    users = load_db("users")
-                    if username in users:
-                        st.error("Username already exists!")
+    with col1:
+        st.markdown("""
+        <div style='background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1)'>
+            <h2 style='color: #4361ee; margin-bottom: 1.5rem; text-align: center;'>Create Your Account</h2>
+        """, unsafe_allow_html=True)
+        
+        # Tab navigation
+        tab1, tab2 = st.tabs(["👤 Personal Account", "💼 Business Account"])
+        
+        with tab1:
+            with st.form("general_signup"):
+                full_name = st.text_input("Full Name")
+                username = st.text_input("Username")
+                email = st.text_input("Email")
+                password = st.text_input("Password", type="password")
+                confirm_password = st.text_input("Confirm Password", type="password")
+                location = st.text_input("Your Location (City)")
+                interests = st.multiselect("Your Interests", ["Art", "Music", "Sports", "Food", "Tech", "Nature"])
+                
+                # Flex container for the button
+                st.markdown("""
+                <div style='display: flex; justify-content: center; margin-top: 1.5rem;'>
+                """, unsafe_allow_html=True)
+                signup_btn = st.form_submit_button("Create Account", type="primary")
+                st.markdown("</div>", unsafe_allow_html=True)
+                
+                if signup_btn:
+                    if password != confirm_password:
+                        st.error("Passwords don't match!")
                     else:
-                        user_id = generate_id("usr")
-                        users[username] = {
-                            "user_id": user_id,
-                            "full_name": full_name,
-                            "email": email,
-                            "password": hash_password(password),
-                            "account_type": "general",
-                            "verified": False,
-                            "joined_date": datetime.now().isoformat(),
-                            "interests": interests,
-                            "location": {"city": location},
-                            "profile_pic": f"https://randomuser.me/api/portraits/{random.choice(['men','women'])}/{random.randint(1,100)}.jpg"
-                        }
-                        save_db("users", users)
-                        st.session_state["user"] = users[username]
-                        st.session_state["logged_in"] = True
-                        st.success("Account created successfully!")
-                        time.sleep(1)
-                        st.experimental_rerun()
+                        users = load_db("users")
+                        if username in users:
+                            st.error("Username already exists!")
+                        else:
+                            user_id = generate_id("usr")
+                            users[username] = {
+                                "user_id": user_id,
+                                "full_name": full_name,
+                                "email": email,
+                                "password": hash_password(password),
+                                "account_type": "general",
+                                "verified": False,
+                                "joined_date": datetime.now().isoformat(),
+                                "interests": interests,
+                                "location": {"city": location},
+                                "profile_pic": f"https://randomuser.me/api/portraits/{random.choice(['men','women'])}/{random.randint(1,100)}.jpg"
+                            }
+                            save_db("users", users)
+                            st.session_state["user"] = users[username]
+                            st.session_state["logged_in"] = True
+                            st.success("Account created successfully!")
+                            time.sleep(1)
+                            st.experimental_rerun()
+        
+        with tab2:
+            with st.form("business_signup"):
+                business_name = st.text_input("Business Name")
+                owner_name = st.text_input("Owner/Representative Name")
+                username = st.text_input("Username")
+                email = st.text_input("Business Email")
+                password = st.text_input("Password", type="password")
+                confirm_password = st.text_input("Confirm Password", type="password")
+                category = st.selectbox("Business Category", ["Food & Drink", "Retail", "Services", "Entertainment", "Other"])
+                address = st.text_input("Business Address")
+                
+                # Flex container for the button
+                st.markdown("""
+                <div style='display: flex; justify-content: center; margin-top: 1.5rem;'>
+                """, unsafe_allow_html=True)
+                signup_btn = st.form_submit_button("Register Business", type="primary")
+                st.markdown("</div>", unsafe_allow_html=True)
+                
+                if signup_btn:
+                    if password != confirm_password:
+                        st.error("Passwords don't match!")
+                    else:
+                        users = load_db("users")
+                        businesses = load_db("businesses")
+                        
+                        if username in users:
+                            st.error("Username already exists!")
+                        else:
+                            # Create user account
+                            user_id = generate_id("usr")
+                            users[username] = {
+                                "user_id": user_id,
+                                "full_name": owner_name,
+                                "email": email,
+                                "password": hash_password(password),
+                                "account_type": "business",
+                                "verified": False,
+                                "joined_date": datetime.now().isoformat(),
+                                "profile_pic": f"https://randomuser.me/api/portraits/{random.choice(['men','women'])}/{random.randint(1,100)}.jpg"
+                            }
+                            
+                            # Create business profile
+                            business_id = generate_id("biz")
+                            businesses[business_id] = {
+                                "business_id": business_id,
+                                "owner_id": user_id,
+                                "business_name": business_name,
+                                "category": category,
+                                "verified": False,
+                                "locations": [{"address": address}],
+                                "created_at": datetime.now().isoformat()
+                            }
+                            
+                            save_db("users", users)
+                            save_db("businesses", businesses)
+                            st.session_state["user"] = users[username]
+                            st.session_state["business"] = businesses[business_id]
+                            st.session_state["logged_in"] = True
+                            st.success("Business account created! Verification pending.")
+                            time.sleep(1)
+                            st.experimental_rerun()
+        
+        st.markdown("</div>", unsafe_allow_html=True)  # Close card div
+        
+        # Already have account link
+        st.markdown("""
+        <div style='text-align: center; margin-top: 1rem;'>
+            Already have an account? <a href='#login' style='color: #4361ee; text-decoration: none;'>Login</a>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col2:
+        # Benefits Card
+        st.markdown("""
+        <div style='background: #f8f9fa; padding: 2rem; border-radius: 12px; height: 100%;'>
+            <h2 style='color: #4361ee; margin-bottom: 1rem;'>Why Join Atmosphere?</h2>
+            
+            <div style='margin-bottom: 2rem;'>
+                <div style='display: flex; align-items: flex-start; margin-bottom: 1.5rem;'>
+                    <div style='background: #4361ee; color: white; border-radius: 8px; padding: 0.5rem; margin-right: 1rem;'>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm-3.5-6.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h4 style='margin: 0; color: #212529;'>Local Connections</h4>
+                        <p style='color: #6c757d; margin: 0.25rem 0 0;'>Meet people in your community with similar interests</p>
+                    </div>
+                </div>
+                
+                <div style='display: flex; align-items: flex-start; margin-bottom: 1.5rem;'>
+                    <div style='background: #4361ee; color: white; border-radius: 8px; padding: 0.5rem; margin-right: 1rem;'>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm-3.5-6.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h4 style='margin: 0; color: #212529;'>Business Growth</h4>
+                        <p style='color: #6c757d; margin: 0.25rem 0 0;'>Connect with potential customers and promote your business</p>
+                    </div>
+                </div>
+                
+                <div style='display: flex; align-items: flex-start; margin-bottom: 1.5rem;'>
+                    <div style='background: #4361ee; color: white; border-radius: 8px; padding: 0.5rem; margin-right: 1rem;'>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm-3.5-6.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h4 style='margin: 0; color: #212529;'>Exclusive Events</h4>
+                        <p style='color: #6c757d; margin: 0.25rem 0 0;'>Discover and attend local events tailored to your interests</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div style='text-align: center; margin-top: 2rem;'>
+                <p style='color: #6c757d;'>Already a member? <a href='#login' style='color: #4361ee; text-decoration: none;'>Sign in</a></p>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
     with tab2:
         with st.form("business_signup"):
