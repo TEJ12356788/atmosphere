@@ -498,7 +498,7 @@ def login_page():
             except Exception as e:
                 st.error(f"Something went wrong: {e}")
     with col2:
-    st.markdown("""
+       st.markdown("""
         <div class="card">
             <h3 class="card-title" style="color: #212529;">🌞 New to Atmosphere?</h3>
             <ul style="list-style-type: none; padding-left: 0; font-size: 0.95rem; color: #212529;">
@@ -508,16 +508,15 @@ def login_page():
                 <li>🚀 Promote your business locally</li>
             </ul>
             <p style="margin-top: 10px; color: #212529;">Don't have an account?</p>
-            <div onclick="window.streamlitScriptHostRPC.trigger('signup_click')" 
-                 style="color: #4361ee; font-weight: bold; cursor: pointer;">
-                Sign up now →
-            </div>
         </div>
     """, unsafe_allow_html=True)
-    
-    if st.session_state.get("signup_click"):
+
+    # Styled button that looks like a link
+    if st.button("👉 Sign up now", key="signup_redirect"):
         st.session_state["auth_tab"] = "Sign Up"
         st.rerun()
+
+
 
 def signup_page():
     """Signup page with tabs for different account types"""
@@ -1220,7 +1219,10 @@ def main():
     if not st.session_state["logged_in"]:
         # Authentication pages
         st.sidebar.title("Atmosphere")
-        auth_tab = st.sidebar.radio("Navigation", ["Login", "Sign Up"])
+        auth_tab = st.session_state.get("auth_tab", "Login")
+        auth_tab = st.sidebar.radio("Navigation", ["Login", "Sign Up"], index=0 if auth_tab == "Login" else 1)
+        st.session_state["auth_tab"] = auth_tab
+
         
         if auth_tab == "Login":
             login_page()
