@@ -7,17 +7,7 @@ from datetime import datetime
 from PIL import Image
 import random
 import uuid
-from pathlib import Path
 
-# ===== CONFIGURATION =====
-APP_NAME = "Atmosphere"
-VERSION = "1.0.0"
-DATA_DIR = "data"
-MEDIA_DIR = "media_gallery"
-os.makedirs(DATA_DIR, exist_ok=True)
-os.makedirs(MEDIA_DIR, exist_ok=True)
-
-# ===== STYLING =====
 def load_css():
     """Define all CSS styling for the application"""
     st.markdown(f"""
@@ -154,6 +144,13 @@ def load_css():
         font-size: 0.8rem;
     }}
     
+    /* Activity Tabs */
+    .activity-tab {{
+        border-bottom: 1px solid #dee2e6;
+        padding-bottom: 10px;
+        margin-bottom: 15px;
+    }}
+    
     /* Responsive Adjustments */
     @media (max-width: 768px) {{
         .hero-title {{
@@ -162,40 +159,190 @@ def load_css():
         .card {{
             margin-bottom: 15px;
         }}
-        .sidebar .sidebar-content {{
-            padding: 10px;
-        }}
     }}
     </style>
     """, unsafe_allow_html=True)
 
+# ===== HTML COMPONENTS SECTION =====
+def card(title, content, image=None, action_button=None):
+    """Reusable card component with optional image and action button"""
+    img_html = f'<img src="{image}" style="width:100%; border-radius:8px; margin-bottom:15px;">' if image else ''
+    button_html = f'<button class="card-button">{action_button}</button>' if action_button else ''
+    
+    st.markdown(f"""
+    <div class="card">
+        <div class="card-title">{title}</div>
+        {img_html}
+        <div class="card-content">{content}</div>
+        {button_html}
+    </div>
+    """, unsafe_allow_html=True)
+
+def hero_section(title, subtitle, image_url):
+    """Hero banner component with title and subtitle"""
+    st.markdown(f"""
+    <div class="hero-container">
+        <img src="{image_url}" style="width:100%; border-radius:8px;">
+        <div class="hero-text">
+            <h1 class="hero-title">{title}</h1>
+            <p>{subtitle}</p>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+def activity_item(user, action, time_ago):
+    """Activity feed item component"""
+    st.markdown(f"""
+    <div class="activity-item">
+        <strong>{user}</strong> {action}
+        <div class="activity-time">{time_ago}</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+def stats_card(title, value):
+    st.markdown(f"""
+    <div class="stats-card">
+        <h3>{title}</h3>
+        <div class="value">{value}</div>
+    </div>
+    """, unsafe_allow_html=True)
+
 # ===== DATABASE CONFIGURATION =====
-DB_FILES = {
-    "users": os.path.join(DATA_DIR, "users.json"),
-    "businesses": os.path.join(DATA_DIR, "businesses.json"),
-    "media": os.path.join(DATA_DIR, "media.json"),
-    "circles": os.path.join(DATA_DIR, "circles.json"),
-    "events": os.path.join(DATA_DIR, "events.json"),
-    "promotions": os.path.join(DATA_DIR, "promotions.json"),
-    "notifications": os.path.join(DATA_DIR, "notifications.json"),
-    "reports": os.path.join(DATA_DIR, "reports.json")
+DB_STRUCTURE = {
+    "users": {
+        "sample_user": {
+            "user_id": "usr_123",
+            "full_name": "John Doe",
+            "email": "john@example.com",
+            "password": "<hashed_password>",
+            "account_type": "general",
+            "verified": True,
+            "joined_date": "2023-01-01",
+            "interests": ["music", "tech"],
+            "location": {"city": "New York", "lat": 40.7128, "lng": -74.0060},
+            "profile_pic": "https://randomuser.me/api/portraits/men/1.jpg"
+        }
+    },
+    "businesses": {
+        "sample_business": {
+            "business_id": "biz_123",
+            "owner_id": "usr_123",
+            "business_name": "Cool Cafe",
+            "category": "Food & Drink",
+            "verified": False,
+            "locations": [
+                {"address": "123 Main St", "lat": 40.7128, "lng": -74.0060}
+            ]
+        }
+    },
+    "media": [
+        {
+            "media_id": "med_123",
+            "user_id": "usr_123",
+            "file_path": "media_gallery/usr_123_photo1.jpg",
+            "location": {"name": "Central Park", "lat": 40.7829, "lng": -73.9654},
+            "timestamp": "2023-01-01T12:00:00",
+            "circle_id": "cir_123",
+            "tags": ["nature", "park"],
+            "reports": []
+        }
+    ],
+    "circles": {
+        "cir_123": {
+            "circle_id": "cir_123",
+            "name": "NYC Photographers",
+            "description": "For photography enthusiasts in NYC",
+            "type": "public",
+            "location": {"city": "New York", "lat": 40.7128, "lng": -74.0060},
+            "members": ["usr_123"],
+            "events": ["evt_123"],
+            "business_owned": False,
+            "created_at": "2023-01-01T10:00:00"
+        }
+    },
+    "events": {
+        "evt_123": {
+            "event_id": "evt_123",
+            "circle_id": "cir_123",
+            "name": "Sunset Photography Meetup",
+            "description": "Let's capture the sunset together!",
+            "location": {"name": "Brooklyn Bridge", "lat": 40.7061, "lng": -73.9969},
+            "date": "2023-06-15",
+            "time": "18:00",
+            "organizer": "usr_123",
+            "attendees": ["usr_123"],
+            "capacity": 20,
+            "tags": ["photography", "outdoors"],
+            "created_at": "2023-05-01T09:00:00"
+        }
+    },
+    "promotions": {
+        "promo_123": {
+            "promo_id": "promo_123",
+            "business_id": "biz_123",
+            "offer": "20% off coffee",
+            "requirements": "Post 3 photos with #CoolCafe",
+            "start_date": "2023-01-01",
+            "end_date": "2023-01-31",
+            "claimed_by": ["usr_123"],
+            "created_at": "2022-12-15T10:00:00"
+        }
+    },
+    "notifications": {
+        "usr_123": [
+            {
+                "notification_id": "notif_123",
+                "type": "event_reminder",
+                "content": "Sunset Photography Meetup starts in 2 hours!",
+                "timestamp": "2023-06-15T16:00:00",
+                "read": False,
+                "related_id": "evt_123"
+            }
+        ]
+    },
+    "reports": [
+        {
+            "report_id": "rep_123",
+            "reporter_id": "usr_123",
+            "content_id": "med_123",
+            "content_type": "media",
+            "reason": "Inappropriate content",
+            "status": "pending",
+            "timestamp": "2023-01-01T12:30:00"
+        }
+    ]
 }
 
+DB_FILES = {
+    "users": "data/users.json",
+    "businesses": "data/businesses.json",
+    "media": "data/media.json",
+    "circles": "data/circles.json",
+    "events": "data/events.json",
+    "promotions": "data/promotions.json",
+    "notifications": "data/notifications.json",
+    "reports": "data/reports.json"
+}
+
+MEDIA_DIR = "media_gallery"
+os.makedirs("data", exist_ok=True)
+os.makedirs(MEDIA_DIR, exist_ok=True)
+
+# ===== HELPER FUNCTIONS =====
 def init_db():
     """Initialize database files with empty structures"""
-    for file_key, file_path in DB_FILES.items():
-        if not os.path.exists(file_path):
-            with open(file_path, "w") as f:
-                if file_key in ["users", "businesses", "circles", "events", "promotions", "notifications"]:
+    for file, structure in DB_FILES.items():
+        if not os.path.exists(file):
+            with open(file, "w") as f:
+                if file in ["users", "businesses", "circles", "notifications"]:
                     json.dump({}, f)
                 else:
                     json.dump([], f)
 
 def load_db(file_key):
-    """Load database file with error handling"""
-    file_path = DB_FILES[file_key]
+    """Load database file"""
     try:
-        with open(file_path, "r") as f:
+        with open(DB_FILES[file_key], "r") as f:
             data = json.load(f)
             # Ensure the structure matches expected format
             if file_key in ["users", "businesses", "circles", "events", "promotions", "notifications"] and not isinstance(data, dict):
@@ -204,42 +351,27 @@ def load_db(file_key):
                 return []
             return data
     except (FileNotFoundError, json.JSONDecodeError):
-        # If file is corrupted or doesn't exist, reinitialize it
         init_db()
         return load_db(file_key)
 
 def save_db(file_key, data):
-    """Save database file with atomic write"""
-    file_path = DB_FILES[file_key]
-    temp_path = f"{file_path}.tmp"
-    
-    with open(temp_path, "w") as f:
+    """Save database file"""
+    with open(DB_FILES[file_key], "w") as f:
         json.dump(data, f, indent=2)
-    
-    # Atomic operation - replace old file only if new file was successfully written
-    if os.path.exists(temp_path):
-        os.replace(temp_path, file_path)
 
-# ===== HELPER FUNCTIONS =====
 def generate_id(prefix):
     """Generate unique ID"""
     return f"{prefix}_{uuid.uuid4().hex[:8]}"
 
 def hash_password(password):
-    """Hash password using bcrypt"""
     return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
 
 def verify_password(password, hashed):
-    """Verify password against hashed version"""
-    try:
-        return bcrypt.checkpw(password.encode(), hashed.encode())
-    except Exception:
-        return False
+    return bcrypt.checkpw(password.encode(), hashed.encode())
 
 def add_notification(user_id, notification_type, content, related_id=None):
     """Add notification to user's feed"""
     notifications = load_db("notifications")
-    
     if user_id not in notifications:
         notifications[user_id] = []
     
@@ -251,10 +383,6 @@ def add_notification(user_id, notification_type, content, related_id=None):
         "read": False,
         "related_id": related_id
     })
-    
-    # Keep only the 50 most recent notifications
-    notifications[user_id] = notifications[user_id][-50:]
-    
     save_db("notifications", notifications)
 
 def get_user_media(user_id):
@@ -313,7 +441,7 @@ def generate_sample_data():
             "name": "Sunset Photography Meetup",
             "description": "Let's capture the sunset together!",
             "location": {"name": "Brooklyn Bridge", "lat": 40.7061, "lng": -73.9969},
-            "date": (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d"),
+            "date": datetime.now().strftime("%Y-%m-%d"),
             "time": "18:00",
             "organizer": "usr_123",
             "attendees": ["usr_123"],
@@ -335,73 +463,17 @@ def generate_sample_data():
         }]
         save_db("notifications", notifications)
 
-# ===== COMPONENTS =====
-def card(title, content, image=None, action_button=None, action_key=None):
-    """Reusable card component with optional image and action button"""
-    img_html = f'<img src="{image}" style="width:100%; border-radius:8px; margin-bottom:15px;">' if image else ''
-    button_html = f"""
-    <div style="margin-top: 15px;">
-        <button class="card-button" id="{action_key}">{action_button}</button>
-    </div>
-    """ if action_button and action_key else ''
-    
-    st.markdown(f"""
-    <div class="card">
-        <div class="card-title">{title}</div>
-        {img_html}
-        <div class="card-content">{content}</div>
-        {button_html}
-    </div>
-    """, unsafe_allow_html=True)
-    
-    if action_button and action_key:
-        return st.button(action_button, key=action_key)
-    return None
-
-def hero_section(title, subtitle, image_url):
-    """Hero banner component with title and subtitle"""
-    st.markdown(f"""
-    <div class="hero-container">
-        <img src="{image_url}" style="width:100%; border-radius:8px; max-height: 300px; object-fit: cover;">
-        <div class="hero-text">
-            <h1 class="hero-title">{title}</h1>
-            <p>{subtitle}</p>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-def activity_item(user, action, time_ago):
-    """Activity feed item component"""
-    st.markdown(f"""
-    <div class="activity-item">
-        <strong>{user}</strong> {action}
-        <div class="activity-time">{time_ago}</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-def stats_card(title, value):
-    """Stats card component"""
-    st.markdown(f"""
-    <div class="stats-card">
-        <h3>{title}</h3>
-        <div class="value">{value}</div>
-    </div>
-    """, unsafe_allow_html=True)
-
 # ===== AUTHENTICATION PAGES =====
 def login_page():
-    """Login page with welcome message"""
-    st.markdown(f"""
-        <h1 class='hero-title'>Welcome to {APP_NAME}</h1>
+    st.markdown("""
+        <h1 class='hero-title'>Welcome to Atmosphere</h1>
         <p class='hero-subtitle'>
             Your digital space to connect with like-minded individuals, explore engaging events, 
-            and share your stories within interest-based circles.
+            and share your stories within interest-based circles. Dive in and discover a vibrant, interactive community.
         </p>
     """, unsafe_allow_html=True)
 
-    st.image("https://images.unsplash.com/photo-1469474968028-56623f02e42e", 
-             use_container_width=True, 
-             caption="Capture the vibe with Atmosphere")
+    st.image("https://images.unsplash.com/photo-1469474968028-56623f02e42e", use_container_width=True, caption="Capture the vibe with Atmosphere")
     st.markdown("---")
 
     col1, col2 = st.columns([2, 1])
@@ -411,30 +483,20 @@ def login_page():
             username = st.text_input("Username", key="login_username")
             password = st.text_input("Password", type="password", key="login_password")
             login_btn = st.form_submit_button("Login")
-            
-            if login_btn:
-                if not username or not password:
-                    st.error("Please enter both username and password")
-                else:
+            try:
+                if login_btn:
                     users = load_db("users")
                     if username in users and verify_password(password, users[username]["password"]):
                         st.session_state["user"] = users[username]
                         st.session_state["logged_in"] = True
-                        st.session_state["current_page"] = "Home"
-                        
-                        # Add welcome back notification
-                        add_notification(
-                            users[username]["user_id"], 
-                            "login", 
-                            "Welcome back to Atmosphere!"
-                        )
-                        
-                        st.success("Login successful! Redirecting...")
+                        add_notification(users[username]["user_id"], "login", "Welcome back to Atmosphere!")
+                        st.success("Login successful!")
                         time.sleep(1)
                         st.rerun()
                     else:
                         st.error("Invalid username or password")
-    
+            except Exception as e:
+                st.error(f"Something went wrong: {e}")
     with col2:
         st.markdown("""
             <div class="card">
@@ -459,27 +521,23 @@ def signup_page():
     with tab1:
         with st.form("general_signup"):
             st.subheader("Create Personal Account")
-            full_name = st.text_input("Full Name", placeholder="John Doe")
-            username = st.text_input("Username", placeholder="johndoe123")
-            email = st.text_input("Email", placeholder="john@example.com")
+            full_name = st.text_input("Full Name")
+            username = st.text_input("Username")
+            email = st.text_input("Email")
             password = st.text_input("Password", type="password")
             confirm_password = st.text_input("Confirm Password", type="password")
-            location = st.text_input("Your Location (City)", placeholder="New York")
+            location = st.text_input("Your Location (City)")
             interests = st.multiselect("Your Interests", ["Art", "Music", "Sports", "Food", "Tech", "Nature"])
             
             signup_btn = st.form_submit_button("Create Account")
             
             if signup_btn:
-                if not all([full_name, username, email, password, confirm_password]):
-                    st.error("Please fill in all required fields")
-                elif password != confirm_password:
+                if password != confirm_password:
                     st.error("Passwords don't match!")
                 else:
                     users = load_db("users")
                     if username in users:
                         st.error("Username already exists!")
-                    elif any(u["email"] == email for u in users.values()):
-                        st.error("Email already registered!")
                     else:
                         user_id = generate_id("usr")
                         users[username] = {
@@ -489,47 +547,34 @@ def signup_page():
                             "password": hash_password(password),
                             "account_type": "general",
                             "verified": False,
-                            "joined_date": datetime.now().strftime("%Y-%m-%d"),
+                            "joined_date": datetime.now().isoformat(),
                             "interests": interests,
                             "location": {"city": location},
                             "profile_pic": f"https://randomuser.me/api/portraits/{random.choice(['men','women'])}/{random.randint(1,100)}.jpg"
                         }
                         save_db("users", users)
-                        
-                        # Set session state and redirect
                         st.session_state["user"] = users[username]
                         st.session_state["logged_in"] = True
-                        st.session_state["current_page"] = "Home"
-                        
-                        # Add welcome notification
-                        add_notification(
-                            user_id, 
-                            "welcome", 
-                            "Welcome to Atmosphere! Get started by joining a circle."
-                        )
-                        
-                        st.success("Account created successfully! Redirecting...")
+                        st.success("Account created successfully!")
                         time.sleep(1)
                         st.rerun()
 
     with tab2:
         with st.form("business_signup"):
             st.subheader("Register Your Business")
-            business_name = st.text_input("Business Name", placeholder="Cool Cafe")
-            owner_name = st.text_input("Owner/Representative Name", placeholder="John Doe")
-            username = st.text_input("Username", placeholder="coolcafe")
-            email = st.text_input("Business Email", placeholder="contact@coolcafe.com")
+            business_name = st.text_input("Business Name")
+            owner_name = st.text_input("Owner/Representative Name")
+            username = st.text_input("Username")
+            email = st.text_input("Business Email")
             password = st.text_input("Password", type="password")
             confirm_password = st.text_input("Confirm Password", type="password")
             category = st.selectbox("Business Category", ["Food & Drink", "Retail", "Services", "Entertainment", "Other"])
-            address = st.text_input("Business Address", placeholder="123 Main St, New York")
+            address = st.text_input("Business Address")
             
             signup_btn = st.form_submit_button("Register Business")
             
             if signup_btn:
-                if not all([business_name, owner_name, username, email, password, confirm_password, address]):
-                    st.error("Please fill in all required fields")
-                elif password != confirm_password:
+                if password != confirm_password:
                     st.error("Passwords don't match!")
                 else:
                     users = load_db("users")
@@ -537,8 +582,6 @@ def signup_page():
                     
                     if username in users:
                         st.error("Username already exists!")
-                    elif any(u["email"] == email for u in users.values()):
-                        st.error("Email already registered!")
                     else:
                         # Create user account
                         user_id = generate_id("usr")
@@ -549,7 +592,7 @@ def signup_page():
                             "password": hash_password(password),
                             "account_type": "business",
                             "verified": False,
-                            "joined_date": datetime.now().strftime("%Y-%m-%d"),
+                            "joined_date": datetime.now().isoformat(),
                             "profile_pic": f"https://randomuser.me/api/portraits/{random.choice(['men','women'])}/{random.randint(1,100)}.jpg"
                         }
                         
@@ -567,21 +610,10 @@ def signup_page():
                         
                         save_db("users", users)
                         save_db("businesses", businesses)
-                        
-                        # Set session state and redirect
                         st.session_state["user"] = users[username]
                         st.session_state["business"] = businesses[business_id]
                         st.session_state["logged_in"] = True
-                        st.session_state["current_page"] = "Home"
-                        
-                        # Add welcome notification
-                        add_notification(
-                            user_id, 
-                            "welcome", 
-                            "Your business account has been created! Verification pending."
-                        )
-                        
-                        st.success("Business account created! Verification pending. Redirecting...")
+                        st.success("Business account created! Verification pending.")
                         time.sleep(1)
                         st.rerun()
 
@@ -620,7 +652,7 @@ def home_page():
         if not notifications:
             st.info("No recent activity")
         else:
-            for notif in notifications[-3:][::-1]:  # Show 3 most recent
+            for notif in notifications[:3]:
                 st.markdown(f"""
                 <div class="activity-item">
                     <div>System: {notif['content']}</div>
@@ -637,12 +669,14 @@ def home_page():
             st.info("You haven't joined any circles yet")
         else:
             for circle in circles:
-                card(
-                    circle["name"],
-                    f"{len(circle['members'])} members • {circle['type'].capitalize()}",
-                    action_button="View Circle",
-                    action_key=f"view_circle_{circle['circle_id']}"
-                )
+                st.markdown(f"""
+                <div class="activity-item">
+                    <div><strong>{circle['name']}</strong></div>
+                    <div class="activity-time">
+                        {len(circle['members'])} members • {circle['type'].capitalize()}
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
     
     with tab3:
         st.markdown('<div class="activity-tab">Upcoming Events</div>', unsafe_allow_html=True)
@@ -655,13 +689,15 @@ def home_page():
             st.info("No upcoming events")
         else:
             for event in events:
-                card(
-                    event["name"],
-                    f"{event['date']} at {event['time']}\n{event['location']['name']}",
-                    action_button="View Event",
-                    action_key=f"view_event_{event['event_id']}"
-                )
-
+                st.markdown(f"""
+                <div class="activity-item">
+                    <div><strong>{event['name']}</strong></div>
+                    <div>{event['date']} at {event['time']}</div>
+                    <div class="activity-time">
+                        {event['location']['name']}
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
 def explore_page():
     """Explore page to discover content"""
     generate_sample_data()
@@ -670,7 +706,7 @@ def explore_page():
     # Search functionality
     search_col, filter_col = st.columns([3, 1])
     with search_col:
-        search_query = st.text_input("Search for circles, events, or locations", placeholder="e.g. photography, food, etc.")
+        search_query = st.text_input("Search for circles, events, or locations")
     with filter_col:
         filter_type = st.selectbox("Filter", ["All", "Circles", "Events", "Locations"])
     
@@ -682,32 +718,93 @@ def explore_page():
         index=1  # Default to Dubai
     )
     
-    # Sample map placeholder
-    st.image("https://maps.googleapis.com/maps/api/staticmap?center=25.2048,55.2708&zoom=12&size=800x300&markers=color:red%7C25.2048,55.2708&key=YOUR_API_KEY",
-             use_container_width=True,
-             caption=f"Map of {location} with popular locations")
+    # Sample map images
+    map_images = {
+        "New York": "https://maps.googleapis.com/maps/api/staticmap?center=40.7128,-74.0060&zoom=12&size=800x300&markers=color:red%7C40.7128,-74.0060&key=YOUR_API_KEY",
+        "Dubai": "https://www.mapquest.com/dubai/dubai-282704697",
+        "London": "https://maps.googleapis.com/maps/api/staticmap?center=51.5074,-0.1278&zoom=12&size=800x300&markers=color:red%7C51.5074,-0.1278&key=YOUR_API_KEY",
+        "Tokyo": "https://maps.googleapis.com/maps/api/staticmap?center=35.6762,139.6503&zoom=12&size=800x300&markers=color:red%7C35.6762,139.6503&key=YOUR_API_KEY"
+    }
     
-    # Popular circles section
+    st.image(map_images[location], 
+            use_container_width=True, 
+            caption=f"Map of {location} with popular locations")
+    
+    # Popular circles section with sample data
     st.subheader("👥 Popular Circles")
-    circles = load_db("circles")
     
-    for circle in list(circles.values())[:3]:
-        btn = card(
+    circles_data = [
+        {
+            "name": "NYC Photographers",
+            "description": "For photography enthusiasts in NYC. Weekly photo walks and editing workshops.",
+            "members": 327,
+            "type": "public",
+            "image": "https://images.unsplash.com/photo-1496568816309-51d7c20e3b21?w=500"
+        },
+        {
+            "name": "Dubai Food Lovers",
+            "description": "Discover hidden culinary gems across Dubai. Restaurant reviews and food tours.",
+            "members": 215,
+            "type": "public",
+            "image": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=500"
+        },
+        {
+            "name": "Tech Entrepreneurs UAE",
+            "description": "Network with startup founders and tech professionals in the UAE.",
+            "members": 183,
+            "type": "private",
+            "image": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=500"
+        }
+    ]
+    
+    for circle in circles_data:
+        card(
             circle["name"],
-            f"{circle['description']}\n\n👥 {len(circle['members'])} members | 🔓 {circle['type'].capitalize()}",
-            action_button="Join Circle",
-            action_key=f"join_{circle['circle_id']}"
+            f"{circle['description']}\n\n👥 {circle['members']} members | 🔓 {circle['type'].capitalize()}",
+            image=circle["image"],
+            action_button="Join Circle"
         )
-        
-        if btn:
-            if st.session_state["user"]["user_id"] not in circle["members"]:
-                circle["members"].append(st.session_state["user"]["user_id"])
-                save_db("circles", circles)
-                st.success(f"You joined {circle['name']}!")
-                st.rerun()
-            else:
-                st.warning("You're already a member of this circle")
-
+    
+    # Upcoming events section with sample data
+    st.subheader("📅 Upcoming Events")
+    
+    events_data = [
+        {
+            "name": "Sunset Photography at Burj Khalifa",
+            "date": "2025-04-15",
+            "time": "17:30",
+            "location": "Burj Khalifa, Dubai",
+            "description": "Capture stunning sunset views from the world's tallest building. Tripods recommended.",
+            "image": "https://images.unsplash.com/photo-1518684079-3c830dcef090?w=500"
+        },
+        {
+            "name": "Dubai Marina Food Tour",
+            "date": "2025-04-18",
+            "time": "19:00",
+            "location": "Dubai Marina Walk",
+            "description": "Sample cuisine from 5 different restaurants along the marina.",
+            "image": "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=500"
+        },
+        {
+            "name": "Startup Pitch Night",
+            "date": "2025-04-22",
+            "time": "18:30",
+            "location": "DIFC Innovation Hub",
+            "description": "Watch 10 emerging startups pitch to investors. Networking drinks included.",
+            "image": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=500"
+        }
+    ]
+    
+    for event in events_data:
+        card(
+            event["name"],
+            f"""📅 {event['date']} at {event['time']}
+            📍 {event['location']}
+            
+            {event['description']}""",
+            image=event["image"],
+            action_button="RSVP"
+        )
 def media_page():
     """Media upload and gallery page"""
     st.title("📸 Capture & Share Your Moments")
@@ -732,47 +829,39 @@ def media_page():
         tags = st.multiselect("Tags", ["Nature", "Food", "Tech", "Art", "Sports", "Travel"])
         
         if st.button("Upload Media") and captured_photo:
-            # Ensure media directory exists
-            os.makedirs(MEDIA_DIR, exist_ok=True)
-            
             # Save media
             media_id = generate_id("med")
             filename = f"{st.session_state['user']['user_id']}_{media_id}.jpg"
             filepath = os.path.join(MEDIA_DIR, filename)
             
-            try:
-                image = Image.open(captured_photo)
-                image.save(filepath)
-                
-                # Add to database
-                media = load_db("media")
-                media.append({
-                    "media_id": media_id,
-                    "user_id": st.session_state["user"]["user_id"],
-                    "file_path": filepath,
-                    "location": {"name": location},
-                    "timestamp": datetime.now().isoformat(),
-                    "circle_id": next((c["circle_id"] for c in user_circles if c["name"] == selected_circle), None),
-                    "tags": tags,
-                    "reports": []
-                })
-                save_db("media", media)
-                
-                st.success("Media uploaded successfully!")
-                
-                # Check if this qualifies for any promotions
-                promotions = load_db("promotions")
-                for promo_id, promo in promotions.items():
-                    if any(tag.lower() in [t.lower() for t in tags] for tag in promo.get("tags", [])):
-                        add_notification(
-                            st.session_state["user"]["user_id"], 
-                            "promotion", 
-                            f"Your photo qualifies for {promo['offer']} from {promo['business_id']}!"
-                        )
-                
-                st.rerun()
-            except Exception as e:
-                st.error(f"Failed to save image: {str(e)}")
+            image = Image.open(captured_photo)
+            image.save(filepath)
+            
+            # Add to database
+            media = load_db("media")
+            media.append({
+                "media_id": media_id,
+                "user_id": st.session_state["user"]["user_id"],
+                "file_path": filepath,
+                "location": {"name": location},
+                "timestamp": datetime.now().isoformat(),
+                "circle_id": next((c["circle_id"] for c in user_circles if c["name"] == selected_circle), None),
+                "tags": tags,
+                "reports": []
+            })
+            save_db("media", media)
+            
+            st.success("Media uploaded successfully!")
+            
+            # Check if this qualifies for any promotions
+            promotions = load_db("promotions")
+            for promo_id, promo in promotions.items():
+                if any(tag.lower() in [t.lower() for t in tags] for tag in promo.get("tags", [])):
+                    add_notification(
+                        st.session_state["user"]["user_id"], 
+                        "promotion", 
+                        f"Your photo qualifies for {promo['offer']} from {promo['business_id']}!"
+                    )
     
     with tab2:
         st.subheader("Your Shared Memories")
@@ -781,23 +870,223 @@ def media_page():
         if not user_media:
             st.info("You haven't uploaded any media yet. Capture your first moment!")
         else:
-            # Display media in a grid
             cols = st.columns(3)
             for i, item in enumerate(user_media):
                 with cols[i % 3]:
                     try:
-                        if os.path.exists(item["file_path"]):
-                            st.image(
-                                item["file_path"], 
-                                use_container_width=True,
-                                caption=f"{item['location']['name']} • {datetime.fromisoformat(item['timestamp']).strftime('%b %d, %Y')}"
-                            )
-                            st.write(f"Tags: {', '.join(item['tags'])}")
-                        else:
-                            st.warning("Media file not found")
-                    except Exception as e:
-                        st.error(f"Error loading image: {str(e)}")
+                        st.image(
+                            item["file_path"], 
+                            use_container_width=True,
+                            caption=f"{item['location']['name']} • {datetime.fromisoformat(item['timestamp']).strftime('%b %d, %Y')}"
+                        )
+                        st.write(f"Tags: {', '.join(item['tags'])}")
+                    except:
+                        st.warning("Could not load this media file")
 
+def circles_page():
+    """Circles management page"""
+    generate_sample_data()
+    st.title("👥 Your Circles")
+    
+    tab1, tab2, tab3 = st.tabs(["Your Circles", "Discover", "Create"])
+    
+    with tab1:
+        st.subheader("Your Communities")
+        user_circles = get_user_circles(st.session_state["user"]["user_id"])
+        
+        if not user_circles:
+            st.info("You haven't joined any circles yet. Explore some below!")
+        else:
+            for circle in user_circles:
+                with st.expander(f"{circle['name']} ({len(circle['members'])} members)"):
+                    st.write(circle["description"])
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        if st.button("View Posts", key=f"posts_{circle['circle_id']}"):
+                            st.session_state["current_circle"] = circle['circle_id']
+                            st.rerun()
+                    with col2:
+                        if st.button("Leave Circle", key=f"leave_{circle['circle_id']}"):
+                            circles = load_db("circles")
+                            circles[circle["circle_id"]]["members"].remove(st.session_state["user"]["user_id"])
+                            save_db("circles", circles)
+                            st.success(f"You left {circle['name']}")
+                            st.rerun()
+    
+    with tab2:
+        st.subheader("Discover New Circles")
+        all_circles = load_db("circles")
+        user_circles = get_user_circles(st.session_state["user"]["user_id"])
+        user_circle_ids = [c["circle_id"] for c in user_circles]
+        
+        discover_circles = [c for c in all_circles.values() if c["circle_id"] not in user_circle_ids]
+        
+        if not discover_circles:
+            st.info("No new circles to discover at the moment. Check back later!")
+        else:
+            for circle in discover_circles[:5]:
+                card(
+                    circle["name"],
+                    f"{circle['description']}\n\nMembers: {len(circle['members'])} • Type: {circle['type'].capitalize()}",
+                    action_button="Join Circle"
+                )
+    
+    with tab3:
+        st.subheader("Create a New Circle")
+        with st.form("create_circle"):
+            name = st.text_input("Circle Name")
+            description = st.text_area("Description")
+            circle_type = st.radio("Type", ["Public", "Private"])
+            location = st.text_input("Primary Location (optional)")
+            tags = st.multiselect("Tags", ["Art", "Music", "Sports", "Food", "Tech", "Nature", "Business"])
+            
+            if st.form_submit_button("Create Circle"):
+                if name:
+                    circle_id = generate_id("cir")
+                    circles = load_db("circles")
+                    circles[circle_id] = {
+                        "circle_id": circle_id,
+                        "name": name,
+                        "description": description,
+                        "type": circle_type.lower(),
+                        "creator": st.session_state["user"]["user_id"],
+                        "members": [st.session_state["user"]["user_id"]],
+                        "location": {"name": location} if location else None,
+                        "tags": tags,
+                        "events": [],
+                        "created_at": datetime.now().isoformat(),
+                        "business_owned": st.session_state["user"]["account_type"] == "business"
+                    }
+                    save_db("circles", circles)
+                    st.success(f"Circle '{name}' created successfully!")
+                    add_notification(
+                        st.session_state["user"]["user_id"], 
+                        "circle", 
+                        f"You created a new circle: {name}"
+                    )
+                    time.sleep(1)
+                    st.rerun()
+
+def events_page():
+    """Events management page"""
+    generate_sample_data()
+    st.title("📅 Events")
+    
+    tab1, tab2, tab3 = st.tabs(["Upcoming", "Your Events", "Create"])
+    
+    with tab1:
+        st.subheader("Upcoming Events")
+        
+        # Sample upcoming events data
+        upcoming_events = [
+            {
+                "name": "Sunset Photography Meetup",
+                "date": "2025-04-15",
+                "time": "18:00",
+                "location": "Brooklyn Bridge, New York",
+                "attendees": 12,
+                "capacity": 20,
+                "organizer": "Jane Doe",
+                "description": "Capture stunning sunset views from Brooklyn Bridge. All skill levels welcome!",
+                "image": "https://images.unsplash.com/photo-1496568816309-51d7c20e3b21?w=500"
+            },
+            {
+                "name": "Downtown Food Tour",
+                "date": "2025-04-18",
+                "time": "19:00",
+                "location": "Lower Manhattan",
+                "attendees": 8,
+                "capacity": 15,
+                "organizer": "Mike Chen",
+                "description": "Explore hidden culinary gems in downtown NYC",
+                "image": "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=500"
+            },
+            {
+                "name": "Tech Startup Mixer",
+                "date": "2025-04-20",
+                "time": "19:30",
+                "location": "WeWork Soho",
+                "attendees": 25,
+                "capacity": 50,
+                "organizer": "Alex Johnson",
+                "description": "Network with fellow tech entrepreneurs and investors",
+                "image": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=500"
+            }
+        ]
+        
+        if not upcoming_events:
+            st.info("No upcoming events at the moment. Check back later!")
+        else:
+            for event in upcoming_events:
+                card(
+                    event["name"],
+                    f"""📅 {event['date']} at {event['time']}
+                    📍 {event['location']}
+                    👥 {event['attendees']}/{event['capacity']} attending
+                    🎫 Organized by: {event['organizer']}
+                    
+                    {event['description']}""",
+                    image=event["image"],
+                    action_button="RSVP"
+                )
+    
+    with tab2:
+        st.subheader("Your Events")
+        
+        # Sample events you're attending
+        your_events = [
+            {
+                "name": "Sunset Photography Meetup",
+                "date": "2025-04-15",
+                "time": "18:00",
+                "status": "Confirmed",
+                "organizer": "Jane Doe"
+            },
+            {
+                "name": "Central Park Picnic",
+                "date": "2025-04-10",
+                "time": "12:00",
+                "status": "Completed",
+                "organizer": "Sarah Williams"
+            }
+        ]
+        
+        if not your_events:
+            st.info("You're not attending any events yet. Explore upcoming events!")
+        else:
+            for event in your_events:
+                card(
+                    event["name"],
+                    f"""📅 {event['date']} at {event['time']}
+                    🎫 Organized by: {event['organizer']}
+                    🟢 Status: {event['status']}""",
+                    action_button="View Details"
+                )
+    
+    with tab3:
+        st.subheader("Create New Event")
+        user_circles = get_user_circles(st.session_state["user"]["user_id"])
+        
+        if not user_circles:
+            st.warning("You need to join or create a circle before creating events")
+        else:
+            with st.form("create_event"):
+                name = st.text_input("Event Name")
+                description = st.text_area("Description")
+                date = st.date_input("Date")
+                time = st.time_input("Time")
+                location = st.text_input("Location")
+                circle = st.selectbox(
+                    "Associated Circle",
+                    [c["name"] for c in user_circles]
+                )
+                capacity = st.number_input("Capacity (0 for unlimited)", min_value=0)
+                
+                if st.form_submit_button("Create Event"):
+                    if name:
+                        st.success(f"Event '{name}' created successfully!")
+                        time.sleep(1)
+                        st.rerun()
 def business_page():
     """Business dashboard page"""
     if st.session_state["user"]["account_type"] != "business":
@@ -806,22 +1095,17 @@ def business_page():
     
     st.title("💼 Business Dashboard")
     
-    tab1, tab2, tab3 = st.tabs(["Overview", "Promotions", "Analytics"])
+    tab1, tab2, tab3, tab4 = st.tabs(["Overview", "Promotions", "Analytics", "Verification"])
     
     with tab1:
         st.subheader("Business Overview")
         
-        # Get business info
+        # Business info
         businesses = load_db("businesses")
         business = next(
-            (b for b in businesses.values() 
-             if b["owner_id"] == st.session_state["user"]["user_id"]),
-            None
+            b for b in businesses.values() 
+            if b["owner_id"] == st.session_state["user"]["user_id"]
         )
-        
-        if not business:
-            st.error("Business profile not found")
-            return
         
         col1, col2 = st.columns(2)
         with col1:
@@ -830,63 +1114,54 @@ def business_page():
                 f"""Name: {business['business_name']}
                 Category: {business['category']}
                 Status: {"✅ Verified" if business.get('verified', False) else "⏳ Pending"}""",
-                action_button="Edit Profile",
-                action_key="edit_business_profile"
+                action_button="Edit Profile"
             )
         
         with col2:
             card(
                 "Locations",
                 "\n".join([loc["address"] for loc in business["locations"]]),
-                action_button="Add Location",
-                action_key="add_business_location"
+                action_button="Add Location"
             )
         
         st.subheader("Recent Activity")
+        # Show business-related activity
         st.info("Business activity feed would appear here")
     
     with tab2:
         st.subheader("Create Promotion")
         with st.form("create_promotion"):
-            offer = st.text_input("Offer (e.g., '20% off')", placeholder="20% off all items")
-            description = st.text_area("Promotion Details", placeholder="Describe your promotion in detail")
-            requirements = st.text_input("Requirements (e.g., 'Post 3 photos with #OurBusiness')", 
-                                       placeholder="Follow us and post with #OurBusiness")
-            start_date = st.date_input("Start Date", min_value=datetime.today())
-            end_date = st.date_input("End Date", min_value=datetime.today())
+            offer = st.text_input("Offer (e.g., '20% off')")
+            description = st.text_area("Promotion Details")
+            requirements = st.text_input("Requirements (e.g., 'Post 3 photos with #OurBusiness')")
+            start_date = st.date_input("Start Date")
+            end_date = st.date_input("End Date")
             tags = st.multiselect("Relevant Tags", ["Food", "Drink", "Retail", "Service", "Discount", "Event"])
             
             if st.form_submit_button("Launch Promotion"):
-                if not all([offer, description, requirements]):
-                    st.error("Please fill in all required fields")
-                elif end_date <= start_date:
-                    st.error("End date must be after start date")
-                else:
-                    promo_id = generate_id("promo")
-                    promotions = load_db("promotions")
-                    
-                    businesses = load_db("businesses")
-                    business_id = next(
-                        b["business_id"] for b in businesses.values() 
-                        if b["owner_id"] == st.session_state["user"]["user_id"]
-                    )
-                    
-                    promotions[promo_id] = {
-                        "promo_id": promo_id,
-                        "business_id": business_id,
-                        "offer": offer,
-                        "description": description,
-                        "requirements": requirements,
-                        "start_date": start_date.strftime("%Y-%m-%d"),
-                        "end_date": end_date.strftime("%Y-%m-%d"),
-                        "tags": tags,
-                        "claimed_by": [],
-                        "created_at": datetime.now().isoformat()
-                    }
-                    save_db("promotions", promotions)
-                    st.success("Promotion launched successfully!")
-                    st.rerun()
-
+                promo_id = generate_id("promo")
+                promotions = load_db("promotions")
+                
+                businesses = load_db("businesses")
+                business_id = next(
+                    b["business_id"] for b in businesses.values() 
+                    if b["owner_id"] == st.session_state["user"]["user_id"]
+                )
+                
+                promotions[promo_id] = {
+                    "promo_id": promo_id,
+                    "business_id": business_id,
+                    "offer": offer,
+                    "description": description,
+                    "requirements": requirements,
+                    "start_date": start_date.strftime("%Y-%m-%d"),
+                    "end_date": end_date.strftime("%Y-%m-%d"),
+                    "tags": tags,
+                    "claimed_by": [],
+                    "created_at": datetime.now().isoformat()
+                }
+                save_db("promotions", promotions)
+                st.success("Promotion launched successfully!")
 # ===== MAIN APP FUNCTION =====
 def main():
     """Main application function"""
@@ -895,9 +1170,6 @@ def main():
         st.session_state["logged_in"] = False
     if "current_page" not in st.session_state:
         st.session_state["current_page"] = "Home"
-    
-    # Initialize database
-    init_db()
     
     # Load CSS
     load_css()
@@ -924,6 +1196,29 @@ def main():
             for page, icon in menu_options.items():
                 if st.button(f"{icon} {page}"):
                     st.session_state["current_page"] = page
+            
+            st.markdown("---")
+            if st.button("🚪 Logout"):
+                st.session_state["logged_in"] = False
+                st.session_state["user"] = None
+                st.session_state["current_page"] = "Home"
+                st.rerun()
+            
+            # User profile
+            st.markdown("---")
+            st.image(st.session_state["user"].get("profile_pic", "https://via.placeholder.com/150"), width=60)
+            st.caption(st.session_state["user"]["full_name"])
+    
+    # Page routing
+    if not st.session_state["logged_in"]:
+        # Authentication pages
+        st.sidebar.title("Atmosphere")
+        auth_tab = st.sidebar.radio("Navigation", ["Login", "Sign Up"])
+        
+        if auth_tab == "Login":
+            login_page()
+        else:
+            signup_page()
     else:
         # Main app pages
         if st.session_state["current_page"] == "Home":
