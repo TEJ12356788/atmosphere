@@ -518,16 +518,16 @@ def login_page():
                 <li>🚀 Promote your business locally</li>
             </ul>
             <p style="margin-top: 10px; color: #212529;">Don't have an account?</p>
-        </div>
-    """, unsafe_allow_html=True)
+            signup_clicked = st.button("🔗 Sign up now →", key="signup_now")
 
-    # Styled fake-link button
-    signup_clicked = st.button("🔗 Sign up now →", key="signup_now")
+            if signup_clicked:
+               st.session_state["auth_tab"] = "Sign Up"
+               st.rerun()
 
-    if signup_clicked:
-        st.session_state["auth_tab"] = "Sign Up"
-        st.rerun()
+            </div>
+            """, unsafe_allow_html=True)
 
+    
 
 
 
