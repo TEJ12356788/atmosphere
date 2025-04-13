@@ -498,19 +498,26 @@ def login_page():
             except Exception as e:
                 st.error(f"Something went wrong: {e}")
     with col2:
-        st.markdown("""
-            <div class="card">
-                <h3 class="card-title" style="color: #212529;">🌞 New to Atmosphere?</h3>
-                <ul style="list-style-type: none; padding-left: 0; font-size: 0.95rem; color: #212529;">
-                    <li>✅ Discover local events & activities</li>
-                    <li>🎨 Join interest-based circles</li>
-                    <li>📷 Share your experiences & moments</li>
-                    <li>🚀 Promote your business locally</li>
-                </ul>
-                <p style="margin-top: 10px; color: #212529;">Don't have an account?</p>
-                <a href="#sign-up" onclick="window.location.hash='sign-up'" style="color: #4361ee; font-weight: bold;">Sign up now →</a>
+    st.markdown("""
+        <div class="card">
+            <h3 class="card-title" style="color: #212529;">🌞 New to Atmosphere?</h3>
+            <ul style="list-style-type: none; padding-left: 0; font-size: 0.95rem; color: #212529;">
+                <li>✅ Discover local events & activities</li>
+                <li>🎨 Join interest-based circles</li>
+                <li>📷 Share your experiences & moments</li>
+                <li>🚀 Promote your business locally</li>
+            </ul>
+            <p style="margin-top: 10px; color: #212529;">Don't have an account?</p>
+            <div onclick="window.streamlitScriptHostRPC.trigger('signup_click')" 
+                 style="color: #4361ee; font-weight: bold; cursor: pointer;">
+                Sign up now →
             </div>
-        """, unsafe_allow_html=True)
+        </div>
+    """, unsafe_allow_html=True)
+    
+    if st.session_state.get("signup_click"):
+        st.session_state["auth_tab"] = "Sign Up"
+        st.rerun()
 
 def signup_page():
     """Signup page with tabs for different account types"""
