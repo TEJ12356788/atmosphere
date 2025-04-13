@@ -508,24 +508,28 @@ def login_page():
             except Exception as e:
                 st.error(f"Something went wrong: {e}")
     with col2:
-       st.markdown("""
-        <div class="card">
-            <h3 class="card-title" style="color: #212529;">🌞 New to Atmosphere?</h3>
-            <ul style="list-style-type: none; padding-left: 0; font-size: 0.95rem; color: #212529;">
-                <li>✅ Discover local events & activities</li>
-                <li>🎨 Join interest-based circles</li>
-                <li>📷 Share your experiences & moments</li>
-                <li>🚀 Promote your business locally</li>
-            </ul>
-            <p style="margin-top: 10px; color: #212529;">Don't have an account?</p>
-            signup_clicked = st.button("🔗 Sign up now →", key="signup_now")
-
-            if signup_clicked:
-               st.session_state["auth_tab"] = "Sign Up"
-               st.rerun()
-
+    # Custom card layout using columns to position the button inside
+      with st.container():
+        st.markdown("""
+            <div class="card">
+                <h3 class="card-title" style="color: #212529;">🌞 New to Atmosphere?</h3>
+                <ul style="list-style-type: none; padding-left: 0; font-size: 0.95rem; color: #212529;">
+                    <li>✅ Discover local events & activities</li>
+                    <li>🎨 Join interest-based circles</li>
+                    <li>📷 Share your experiences & moments</li>
+                    <li>🚀 Promote your business locally</li>
+                </ul>
+                <p style="margin-top: 10px; color: #212529;">Don't have an account?</p>
             </div>
-            """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
+
+        # Use an empty container with negative margin to "push" the button inside the card visually
+        st.markdown("<div style='margin-top: -40px;'>", unsafe_allow_html=True)
+        if st.button("🔗 Sign up now →", key="signup_now"):
+            st.session_state["auth_tab"] = "Sign Up"
+            st.rerun()
+        st.markdown("</div>", unsafe_allow_html=True)
+
 
     
 
