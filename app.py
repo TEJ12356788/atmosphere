@@ -92,6 +92,18 @@ def load_css():
     .stButton>button:hover {{
         background-color: var(--secondary);
     }}
+   /* Make the "Sign up now" button look like a link */
+button[kind="secondary"][data-testid="baseButton-signup_now"] {
+    background: none;
+    border: none;
+    color: #4361ee;
+    font-weight: bold;
+    text-align: left;
+    padding: 0;
+    margin-top: -10px;
+    cursor: pointer;
+}
+
     
     /* Forms */
     .stTextInput>div>div>input, 
@@ -511,10 +523,13 @@ def login_page():
         </div>
     """, unsafe_allow_html=True)
 
-    # Styled button that looks like a link
-    if st.button("👉 Sign up now", key="signup_redirect"):
+    # Styled fake-link button
+    signup_clicked = st.button("🔗 Sign up now →", key="signup_now")
+
+    if signup_clicked:
         st.session_state["auth_tab"] = "Sign Up"
         st.rerun()
+
 
 
 
@@ -1222,6 +1237,7 @@ def main():
         auth_tab = st.session_state.get("auth_tab", "Login")
         auth_tab = st.sidebar.radio("Navigation", ["Login", "Sign Up"], index=0 if auth_tab == "Login" else 1)
         st.session_state["auth_tab"] = auth_tab
+
 
         
         if auth_tab == "Login":
