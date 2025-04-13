@@ -23,22 +23,19 @@ def load_css():
         --warning: #f72585;
         --danger: #7209b7;
     }}
-    
-    /* Base Styles */
+
     body {{
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         line-height: 1.6;
         color: var(--dark);
     }}
-    
-    /* Main Containers */
+
     .main-container {{
         max-width: 1200px;
         margin: 0 auto;
         padding: 20px;
     }}
-    
-    /* Cards */
+
     .card {{
         border-radius: 12px;
         box-shadow: 0 4px 8px 0 rgba(0,0,0,0.1);
@@ -48,17 +45,18 @@ def load_css():
         transition: transform 0.3s, box-shadow 0.3s;
         border: 1px solid #e9ecef;
     }}
+
     .card:hover {{
         transform: translateY(-5px);
         box-shadow: 0 8px 16px 0 rgba(0,0,0,0.15);
     }}
+
     .card-title {{
         color: var(--primary);
         margin-bottom: 15px;
         font-size: 1.2rem;
     }}
-    
-    /* Stats Cards */
+
     .stats-card {{
         border-radius: 12px;
         padding: 20px;
@@ -68,19 +66,20 @@ def load_css():
         border: 1px solid #e9ecef;
         text-align: center;
     }}
+
     .stats-card h3 {{
         color: #6c757d;
         font-size: 1rem;
         margin-bottom: 5px;
     }}
+
     .stats-card .value {{
         font-size: 2rem;
         font-weight: bold;
         color: #4361ee;
         margin: 10px 0;
     }}
-    
-    /* Buttons */
+
     .stButton>button {{
         border-radius: 8px;
         padding: 8px 16px;
@@ -89,47 +88,36 @@ def load_css():
         border: none;
         transition: background-color 0.3s;
     }}
+
     .stButton>button:hover {{
         background-color: var(--secondary);
     }}
-   /* Make the "Sign up now" button look like a link */
-button[kind="secondary"][data-testid="baseButton-signup_now"] {
-    background: none;
-    border: none;
-    color: #4361ee;
-    font-weight: bold;
-    text-align: left;
-    padding: 0;
-    margin-top: -10px;
-    cursor: pointer;
-}
 
-    
-    /* Forms */
     .stTextInput>div>div>input, 
     .stTextArea>div>textarea {{
         border-radius: 8px;
         border: 1px solid #ced4da;
     }}
+
     .stSelectbox>div>div>div {{
         border-radius: 8px;
     }}
-    
-    /* Navigation */
+
     .sidebar .sidebar-content {{
         background-color: var(--light);
         padding: 15px;
     }}
+
     .sidebar .sidebar-content .block-container {{
         padding-top: 0;
     }}
-    
-    /* Hero Section */
+
     .hero-container {{
         position: relative;
         text-align: center;
         margin-bottom: 30px;
     }}
+
     .hero-text {{
         position: absolute;
         top: 50%;
@@ -138,12 +126,12 @@ button[kind="secondary"][data-testid="baseButton-signup_now"] {
         color: white;
         text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
     }}
+
     .hero-title {{
         font-size: 2.5rem;
         margin-bottom: 10px;
     }}
-    
-    /* Activity Feed Items */
+
     .activity-item {{
         background-color: #f8f9fa;
         padding: 15px;
@@ -151,19 +139,18 @@ button[kind="secondary"][data-testid="baseButton-signup_now"] {
         margin-bottom: 10px;
         border-left: 4px solid var(--accent);
     }}
+
     .activity-time {{
         color: #6c757d;
         font-size: 0.8rem;
     }}
-    
-    /* Activity Tabs */
+
     .activity-tab {{
         border-bottom: 1px solid #dee2e6;
         padding-bottom: 10px;
         margin-bottom: 15px;
     }}
-    
-    /* Responsive Adjustments */
+
     @media (max-width: 768px) {{
         .hero-title {{
             font-size: 1.8rem;
@@ -172,9 +159,20 @@ button[kind="secondary"][data-testid="baseButton-signup_now"] {
             margin-bottom: 15px;
         }}
     }}
+
+    /* 🔗 Make "Sign up now" look like a link */
+    button[kind="secondary"][data-testid="baseButton-signup_now"] {{
+        background: none;
+        border: none;
+        color: #4361ee;
+        font-weight: bold;
+        text-align: left;
+        padding: 0;
+        margin-top: -10px;
+        cursor: pointer;
+    }}
     </style>
     """, unsafe_allow_html=True)
-
 # ===== HTML COMPONENTS SECTION =====
 def card(title, content, image=None, action_button=None):
     """Reusable card component with optional image and action button"""
