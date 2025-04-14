@@ -160,7 +160,7 @@ def load_css():
         }}
     }}
 
-    /* ð Make "Sign up now" look like a link */
+    /* Make "Sign up now" look like a link */
     button[kind="secondary"][data-testid="baseButton-signup_now"] {{
         background: none;
         border: none;
@@ -173,6 +173,7 @@ def load_css():
     }}
     </style>
     """, unsafe_allow_html=True)
+
 # ===== HTML COMPONENTS SECTION =====
 def card(title, content, image=None, action_button=None):
     """Reusable card component with optional image and action button"""
@@ -341,18 +342,27 @@ os.makedirs(MEDIA_DIR, exist_ok=True)
 # ===== HELPER FUNCTIONS =====
 def init_db():
     """Initialize database files with empty structures"""
-    for file, structure in DB_FILES.items():
-        if not os.path.exists(file):
-            with open(file, "w") as f:
-                if file in ["users", "businesses", "circles", "notifications"]:
-                    json.dump({}, f)
-                else:
-                    json.dump([], f)
+    for file_key, file_path in DB_FILES.items():
+        if not os.path.exists(file_path):
+            try:
+                os.makedirs(os.path.dirname(file_path), exist_ok=True)
+                with open(file_path, "w") as f:
+                    if file_key in ["users", "businesses", "circles", "events", "promotions", "notifications"]:
+                        json.dump({}, f)
+                    else:
+                        json.dump([], f)
+            except Exception as e:
+                st.error(f"Failed to initialize database file {file_path}: {str(e)}")
 
-
-def load_db(file_key, retry_count=0):
+def load_db(file_key, retry_count=0, max_retries=1):
     """Load database file"""
     try:
+        # Ensure the file exists first
+        if not os.path.exists(DB_FILES[file_key]):
+            if retry_count >= max_retries:
+                return {} if file_key in ["users", "businesses", "circles", "events", "promotions", "notifications"] else []
+            init_db()
+            
         with open(DB_FILES[file_key], "r") as f:
             data = json.load(f)
             # Ensure the structure matches expected format
@@ -361,18 +371,21 @@ def load_db(file_key, retry_count=0):
             elif file_key in ["media", "reports"] and not isinstance(data, list):
                 return []
             return data
-    except (FileNotFoundError, json.JSONDecodeError):
-        if retry_count >= 1:
-            st.error(f"Database error: Unable to load {file_key} after retry.")
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        if retry_count >= max_retries:
+            st.error(f"Database error: Unable to load {file_key}. Error: {str(e)}")
             return {} if file_key in ["users", "businesses", "circles", "events", "promotions", "notifications"] else []
+        time.sleep(0.1)  # Add small delay between retries
         init_db()
-        return load_db(file_key, retry_count=1)
-
+        return load_db(file_key, retry_count + 1)
 
 def save_db(file_key, data):
     """Save database file"""
-    with open(DB_FILES[file_key], "w") as f:
-        json.dump(data, f, indent=2)
+    try:
+        with open(DB_FILES[file_key], "w") as f:
+            json.dump(data, f, indent=2)
+    except Exception as e:
+        st.error(f"Failed to save database file {DB_FILES[file_key]}: {str(e)}")
 
 def generate_id(prefix):
     """Generate unique ID"""
@@ -493,7 +506,7 @@ def login_page():
 
     col1, col2 = st.columns([2, 1])
     with col1:
-        st.subheader("ð Log In to Your Account")
+        st.subheader("🔐 Log In to Your Account")
         with st.form("login_form"):
             username = st.text_input("Username", key="login_username")
             password = st.text_input("Password", type="password", key="login_password")
@@ -501,7 +514,9 @@ def login_page():
             try:
                 if login_btn:
                     users = load_db("users")
-                    if username in users and verify_password(password, users[username]["password"]):
+                    if not users:
+                        st.error("User database not available. Please try again later.")
+                    elif username in users and verify_password(password, users[username]["password"]):
                         st.session_state["user"] = users[username]
                         st.session_state["logged_in"] = True
                         add_notification(users[username]["user_id"], "login", "Welcome back to Atmosphere!")
@@ -513,38 +528,33 @@ def login_page():
             except Exception as e:
                 st.error(f"Something went wrong: {e}")
     with col2:
-    # Custom card layout using columns to position the button inside
-      with st.container():
-        st.markdown("""
-            <div class="card">
-                <h3 class="card-title" style="color: #212529;">ð New to Atmosphere?</h3>
-                <ul style="list-style-type: none; padding-left: 0; font-size: 0.95rem; color: #212529;">
-                    <li>â Discover local events & activities</li>
-                    <li>ð¨ Join interest-based circles</li>
-                    <li>ð· Share your experiences & moments</li>
-                    <li>ð Promote your business locally</li>
-                </ul>
-                <p style="margin-top: 10px; color: #212529;">Don't have an account?</p>
-            </div>
-        """, unsafe_allow_html=True)
+        # Custom card layout using columns to position the button inside
+        with st.container():
+            st.markdown("""
+                <div class="card">
+                    <h3 class="card-title" style="color: #212529;">🌐 New to Atmosphere?</h3>
+                    <ul style="list-style-type: none; padding-left: 0; font-size: 0.95rem; color: #212529;">
+                        <li>✔️ Discover local events & activities</li>
+                        <li>🎯 Join interest-based circles</li>
+                        <li>📷 Share your experiences & moments</li>
+                        <li>🚀 Promote your business locally</li>
+                    </ul>
+                    <p style="margin-top: 10px; color: #212529;">Don't have an account?</p>
+                </div>
+            """, unsafe_allow_html=True)
 
-        # Use an empty container with negative margin to "push" the button inside the card visually
-        st.markdown("<div style='margin-top: -40px;'>", unsafe_allow_html=True)
-        if st.button("ð Sign up now â", key="signup_now"):
-            st.session_state["auth_tab"] = "Sign Up"
-            st.rerun()
-        st.markdown("</div>", unsafe_allow_html=True)
-
-
-    
-
-
+            # Use an empty container with negative margin to "push" the button inside the card visually
+            st.markdown("<div style='margin-top: -40px;'>", unsafe_allow_html=True)
+            if st.button("🔗 Sign up now →", key="signup_now"):
+                st.session_state["auth_tab"] = "Sign Up"
+                st.rerun()
+            st.markdown("</div>", unsafe_allow_html=True)
 
 def signup_page():
     """Signup page with tabs for different account types"""
-    st.title("ð Join Our Community")
+    st.title("👤 Join Our Community")
     
-    tab1, tab2 = st.tabs(["ð¤ General User", "ð¼ Business Account"])
+    tab1, tab2 = st.tabs(["👤 General User", "💼 Business Account"])
     
     with tab1:
         with st.form("general_signup"):
@@ -670,7 +680,7 @@ def home_page():
         stats_card("Media Shared", str(user_media) or "0")
     
     # Activity feed
-    st.markdown("## ð° Your Activity Feed")
+    st.markdown("## 📰 Your Activity Feed")
     tab1, tab2, tab3 = st.tabs(["Recent Activity", "Your Circles", "Upcoming Events"])
     
     with tab1:
@@ -701,7 +711,7 @@ def home_page():
                 <div class="activity-item">
                     <div><strong>{circle['name']}</strong></div>
                     <div class="activity-time">
-                        {len(circle['members'])} members â¢ {circle['type'].capitalize()}
+                        {len(circle['members'])} members • {circle['type'].capitalize()}
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
@@ -726,10 +736,11 @@ def home_page():
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
+
 def explore_page():
     """Explore page to discover content"""
     generate_sample_data()
-    st.title("ð Explore Our Community")
+    st.title("🔍 Explore Our Community")
     
     # Search functionality
     search_col, filter_col = st.columns([3, 1])
@@ -739,7 +750,7 @@ def explore_page():
         filter_type = st.selectbox("Filter", ["All", "Circles", "Events", "Locations"])
     
     # Map view with location selector
-    st.subheader("ð Nearby Locations")
+    st.subheader("📍 Nearby Locations")
     location = st.selectbox(
         "Select Location",
         ["New York", "Dubai", "London", "Tokyo"],
@@ -759,7 +770,7 @@ def explore_page():
             caption=f"Map of {location} with popular locations")
     
     # Popular circles section with sample data
-    st.subheader("ð¥ Popular Circles")
+    st.subheader("👥 Popular Circles")
     
     circles_data = [
         {
@@ -788,13 +799,13 @@ def explore_page():
     for circle in circles_data:
         card(
             circle["name"],
-            f"{circle['description']}\n\nð¥ {circle['members']} members | ð {circle['type'].capitalize()}",
+            f"{circle['description']}\n\n👥 {circle['members']} members | 🔓 {circle['type'].capitalize()}",
             image=circle["image"],
             action_button="Join Circle"
         )
     
     # Upcoming events section with sample data
-    st.subheader("ð Upcoming Events")
+    st.subheader("📅 Upcoming Events")
     
     events_data = [
         {
@@ -826,18 +837,19 @@ def explore_page():
     for event in events_data:
         card(
             event["name"],
-            f"""ð {event['date']} at {event['time']}
-            ð {event['location']}
+            f"""📅 {event['date']} at {event['time']}
+            📍 {event['location']}
             
             {event['description']}""",
             image=event["image"],
             action_button="RSVP"
         )
+
 def media_page():
     """Media upload and gallery page"""
-    st.title("ð¸ Capture & Share Your Moments")
+    st.title("📸 Capture & Share Your Moments")
     
-    tab1, tab2 = st.tabs(["ð¤ Upload Media", "ð¼ï¸ Your Gallery"])
+    tab1, tab2 = st.tabs(["📷 Upload Media", "🖼️ Your Gallery"])
     
     with tab1:
         st.subheader("Share Your Experience")
@@ -892,6 +904,8 @@ def media_page():
                     )
     
     with tab2:
+        st.subheader("Your Shared Memories")
+        user_media = get_user_media(st.session_state["user"]["user_id"])
         st.subheader("Your Shared Memories")
         user_media = get_user_media(st.session_state["user"]["user_id"])
         
