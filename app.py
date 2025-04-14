@@ -160,7 +160,7 @@ def load_css():
         }}
     }}
 
-    /* 🔗 Make "Sign up now" look like a link */
+    /* ð Make "Sign up now" look like a link */
     button[kind="secondary"][data-testid="baseButton-signup_now"] {{
         background: none;
         border: none;
@@ -349,7 +349,8 @@ def init_db():
                 else:
                     json.dump([], f)
 
-def load_db(file_key):
+
+def load_db(file_key, retry_count=0):
     """Load database file"""
     try:
         with open(DB_FILES[file_key], "r") as f:
@@ -361,8 +362,12 @@ def load_db(file_key):
                 return []
             return data
     except (FileNotFoundError, json.JSONDecodeError):
+        if retry_count >= 1:
+            st.error(f"Database error: Unable to load {file_key} after retry.")
+            return {} if file_key in ["users", "businesses", "circles", "events", "promotions", "notifications"] else []
         init_db()
-        return load_db(file_key)
+        return load_db(file_key, retry_count=1)
+
 
 def save_db(file_key, data):
     """Save database file"""
@@ -488,7 +493,7 @@ def login_page():
 
     col1, col2 = st.columns([2, 1])
     with col1:
-        st.subheader("🔐 Log In to Your Account")
+        st.subheader("ð Log In to Your Account")
         with st.form("login_form"):
             username = st.text_input("Username", key="login_username")
             password = st.text_input("Password", type="password", key="login_password")
@@ -512,12 +517,12 @@ def login_page():
       with st.container():
         st.markdown("""
             <div class="card">
-                <h3 class="card-title" style="color: #212529;">🌞 New to Atmosphere?</h3>
+                <h3 class="card-title" style="color: #212529;">ð New to Atmosphere?</h3>
                 <ul style="list-style-type: none; padding-left: 0; font-size: 0.95rem; color: #212529;">
-                    <li>✅ Discover local events & activities</li>
-                    <li>🎨 Join interest-based circles</li>
-                    <li>📷 Share your experiences & moments</li>
-                    <li>🚀 Promote your business locally</li>
+                    <li>â Discover local events & activities</li>
+                    <li>ð¨ Join interest-based circles</li>
+                    <li>ð· Share your experiences & moments</li>
+                    <li>ð Promote your business locally</li>
                 </ul>
                 <p style="margin-top: 10px; color: #212529;">Don't have an account?</p>
             </div>
@@ -525,7 +530,7 @@ def login_page():
 
         # Use an empty container with negative margin to "push" the button inside the card visually
         st.markdown("<div style='margin-top: -40px;'>", unsafe_allow_html=True)
-        if st.button("🔗 Sign up now →", key="signup_now"):
+        if st.button("ð Sign up now â", key="signup_now"):
             st.session_state["auth_tab"] = "Sign Up"
             st.rerun()
         st.markdown("</div>", unsafe_allow_html=True)
@@ -537,9 +542,9 @@ def login_page():
 
 def signup_page():
     """Signup page with tabs for different account types"""
-    st.title("🆕 Join Our Community")
+    st.title("ð Join Our Community")
     
-    tab1, tab2 = st.tabs(["👤 General User", "💼 Business Account"])
+    tab1, tab2 = st.tabs(["ð¤ General User", "ð¼ Business Account"])
     
     with tab1:
         with st.form("general_signup"):
@@ -665,7 +670,7 @@ def home_page():
         stats_card("Media Shared", str(user_media) or "0")
     
     # Activity feed
-    st.markdown("## 📰 Your Activity Feed")
+    st.markdown("## ð° Your Activity Feed")
     tab1, tab2, tab3 = st.tabs(["Recent Activity", "Your Circles", "Upcoming Events"])
     
     with tab1:
@@ -696,7 +701,7 @@ def home_page():
                 <div class="activity-item">
                     <div><strong>{circle['name']}</strong></div>
                     <div class="activity-time">
-                        {len(circle['members'])} members • {circle['type'].capitalize()}
+                        {len(circle['members'])} members â¢ {circle['type'].capitalize()}
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
@@ -724,7 +729,7 @@ def home_page():
 def explore_page():
     """Explore page to discover content"""
     generate_sample_data()
-    st.title("🔍 Explore Our Community")
+    st.title("ð Explore Our Community")
     
     # Search functionality
     search_col, filter_col = st.columns([3, 1])
@@ -734,7 +739,7 @@ def explore_page():
         filter_type = st.selectbox("Filter", ["All", "Circles", "Events", "Locations"])
     
     # Map view with location selector
-    st.subheader("📍 Nearby Locations")
+    st.subheader("ð Nearby Locations")
     location = st.selectbox(
         "Select Location",
         ["New York", "Dubai", "London", "Tokyo"],
@@ -754,7 +759,7 @@ def explore_page():
             caption=f"Map of {location} with popular locations")
     
     # Popular circles section with sample data
-    st.subheader("👥 Popular Circles")
+    st.subheader("ð¥ Popular Circles")
     
     circles_data = [
         {
@@ -783,13 +788,13 @@ def explore_page():
     for circle in circles_data:
         card(
             circle["name"],
-            f"{circle['description']}\n\n👥 {circle['members']} members | 🔓 {circle['type'].capitalize()}",
+            f"{circle['description']}\n\nð¥ {circle['members']} members | ð {circle['type'].capitalize()}",
             image=circle["image"],
             action_button="Join Circle"
         )
     
     # Upcoming events section with sample data
-    st.subheader("📅 Upcoming Events")
+    st.subheader("ð Upcoming Events")
     
     events_data = [
         {
@@ -821,8 +826,8 @@ def explore_page():
     for event in events_data:
         card(
             event["name"],
-            f"""📅 {event['date']} at {event['time']}
-            📍 {event['location']}
+            f"""ð {event['date']} at {event['time']}
+            ð {event['location']}
             
             {event['description']}""",
             image=event["image"],
@@ -830,9 +835,9 @@ def explore_page():
         )
 def media_page():
     """Media upload and gallery page"""
-    st.title("📸 Capture & Share Your Moments")
+    st.title("ð¸ Capture & Share Your Moments")
     
-    tab1, tab2 = st.tabs(["📤 Upload Media", "🖼️ Your Gallery"])
+    tab1, tab2 = st.tabs(["ð¤ Upload Media", "ð¼ï¸ Your Gallery"])
     
     with tab1:
         st.subheader("Share Your Experience")
@@ -900,7 +905,7 @@ def media_page():
                         st.image(
                             item["file_path"], 
                             use_container_width=True,
-                            caption=f"{item['location']['name']} • {datetime.fromisoformat(item['timestamp']).strftime('%b %d, %Y')}"
+                            caption=f"{item['location']['name']} â¢ {datetime.fromisoformat(item['timestamp']).strftime('%b %d, %Y')}"
                         )
                         st.write(f"Tags: {', '.join(item['tags'])}")
                     except:
@@ -909,7 +914,7 @@ def media_page():
 def circles_page():
     """Circles management page"""
     generate_sample_data()
-    st.title("👥 Your Circles")
+    st.title("ð¥ Your Circles")
     
     tab1, tab2, tab3 = st.tabs(["Your Circles", "Discover", "Create"])
     
@@ -950,7 +955,7 @@ def circles_page():
             for circle in discover_circles[:5]:
                 card(
                     circle["name"],
-                    f"{circle['description']}\n\nMembers: {len(circle['members'])} • Type: {circle['type'].capitalize()}",
+                    f"{circle['description']}\n\nMembers: {len(circle['members'])} â¢ Type: {circle['type'].capitalize()}",
                     action_button="Join Circle"
                 )
     
@@ -993,7 +998,7 @@ def circles_page():
 def events_page():
     """Events management page"""
     generate_sample_data()
-    st.title("📅 Events")
+    st.title("ð Events")
     
     tab1, tab2, tab3 = st.tabs(["Upcoming", "Your Events", "Create"])
     
@@ -1043,10 +1048,10 @@ def events_page():
             for event in upcoming_events:
                 card(
                     event["name"],
-                    f"""📅 {event['date']} at {event['time']}
-                    📍 {event['location']}
-                    👥 {event['attendees']}/{event['capacity']} attending
-                    🎫 Organized by: {event['organizer']}
+                    f"""ð {event['date']} at {event['time']}
+                    ð {event['location']}
+                    ð¥ {event['attendees']}/{event['capacity']} attending
+                    ð« Organized by: {event['organizer']}
                     
                     {event['description']}""",
                     image=event["image"],
@@ -1080,9 +1085,9 @@ def events_page():
             for event in your_events:
                 card(
                     event["name"],
-                    f"""📅 {event['date']} at {event['time']}
-                    🎫 Organized by: {event['organizer']}
-                    🟢 Status: {event['status']}""",
+                    f"""ð {event['date']} at {event['time']}
+                    ð« Organized by: {event['organizer']}
+                    ð¢ Status: {event['status']}""",
                     action_button="View Details"
                 )
     
@@ -1116,7 +1121,7 @@ def business_page():
         st.warning("This page is only available for business accounts")
         return
     
-    st.title("💼 Business Dashboard")
+    st.title("ð¼ Business Dashboard")
     
     tab1, tab2, tab3, tab4 = st.tabs(["Overview", "Promotions", "Analytics", "Verification"])
     
@@ -1136,7 +1141,7 @@ def business_page():
                 "Business Profile",
                 f"""Name: {business['business_name']}
                 Category: {business['category']}
-                Status: {"✅ Verified" if business.get('verified', False) else "⏳ Pending"}""",
+                Status: {"â Verified" if business.get('verified', False) else "â³ Pending"}""",
                 action_button="Edit Profile"
             )
         
@@ -1205,12 +1210,12 @@ def main():
             
             # Navigation menu
             menu_options = {
-                "Home": "🏠",
-                "Explore": "🔍",
-                "Media": "📸",
-                "Circles": "👥",
-                "Events": "📅",
-                "Business": "💼" if st.session_state["user"]["account_type"] == "business" else None
+                "Home": "ð ",
+                "Explore": "ð",
+                "Media": "ð¸",
+                "Circles": "ð¥",
+                "Events": "ð",
+                "Business": "ð¼" if st.session_state["user"]["account_type"] == "business" else None
             }
             
             # Filter out None values (like Business for non-business accounts)
@@ -1221,7 +1226,7 @@ def main():
                     st.session_state["current_page"] = page
             
             st.markdown("---")
-            if st.button("🚪 Logout"):
+            if st.button("ðª Logout"):
                 st.session_state["logged_in"] = False
                 st.session_state["user"] = None
                 st.session_state["current_page"] = "Home"
