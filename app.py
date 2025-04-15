@@ -177,7 +177,11 @@ def load_css():
 # ===== HTML COMPONENTS SECTION =====
 def card(title, content, image=None, action_button=None):
     """Reusable card component with optional image and action button"""
-    img_html = f'<img src="{image}" style="width:100%; border-radius:8px; margin-bottom:15px;">' if image else ''
+    try:
+        img_html = f'<img src="{image}" style="width:100%; border-radius:8px; margin-bottom:15px;">' if image else ''
+    except:
+        img_html = ''
+    
     button_html = f'<button class="card-button">{action_button}</button>' if action_button else ''
     
     st.markdown(f"""
@@ -501,7 +505,7 @@ def login_page():
         </p>
     """, unsafe_allow_html=True)
 
-    st.image("https://images.unsplash.com/photo-1469474968028-56623f02e42e", use_container_width=True, caption="Capture the vibe with Atmosphere")
+    st.image("https://images.unsplash.com/photo-1469474968028-56623f02e42e", use_column_width=True, caption="Capture the vibe with Atmosphere")
     st.markdown("---")
 
     col1, col2 = st.columns([2, 1])
@@ -757,17 +761,12 @@ def explore_page():
         index=1  # Default to Dubai
     )
     
-    # Sample map images
-    map_images = {
-        "New York": "https://maps.googleapis.com/maps/api/staticmap?center=40.7128,-74.0060&zoom=12&size=800x300&markers=color:red%7C40.7128,-74.0060&key=YOUR_API_KEY",
-        "Dubai": "https://www.mapquest.com/dubai/dubai-282704697",
-        "London": "https://maps.googleapis.com/maps/api/staticmap?center=51.5074,-0.1278&zoom=12&size=800x300&markers=color:red%7C51.5074,-0.1278&key=YOUR_API_KEY",
-        "Tokyo": "https://maps.googleapis.com/maps/api/staticmap?center=35.6762,139.6503&zoom=12&size=800x300&markers=color:red%7C35.6762,139.6503&key=YOUR_API_KEY"
-    }
-    
-    st.image(map_images[location], 
-            use_container_width=True, 
-            caption=f"Map of {location} with popular locations")
+    # Use a placeholder image since we don't have Google Maps API key
+    st.image(
+        "https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5",
+        use_column_width=True,
+        caption=f"Map of {location}"
+    )
     
     # Popular circles section with sample data
     st.subheader("👥 Popular Circles")
@@ -906,8 +905,6 @@ def media_page():
     with tab2:
         st.subheader("Your Shared Memories")
         user_media = get_user_media(st.session_state["user"]["user_id"])
-        st.subheader("Your Shared Memories")
-        user_media = get_user_media(st.session_state["user"]["user_id"])
         
         if not user_media:
             st.info("You haven't uploaded any media yet. Capture your first moment!")
@@ -916,19 +913,23 @@ def media_page():
             for i, item in enumerate(user_media):
                 with cols[i % 3]:
                     try:
-                        st.image(
-                            item["file_path"], 
-                            use_container_width=True,
-                            caption=f"{item['location']['name']} â¢ {datetime.fromisoformat(item['timestamp']).strftime('%b %d, %Y')}"
-                        )
+                        # Check if file exists
+                        if os.path.exists(item["file_path"]):
+                            st.image(
+                                item["file_path"], 
+                                use_column_width=True,
+                                caption=f"{item['location']['name']} • {datetime.fromisoformat(item['timestamp']).strftime('%b %d, %Y')}"
+                            )
+                        else:
+                            st.warning("Image file not found")
                         st.write(f"Tags: {', '.join(item['tags'])}")
-                    except:
-                        st.warning("Could not load this media file")
+                    except Exception as e:
+                        st.warning(f"Could not load media: {str(e)}")
 
 def circles_page():
     """Circles management page"""
     generate_sample_data()
-    st.title("ð¥ Your Circles")
+    st.title("👥 Your Circles")
     
     tab1, tab2, tab3 = st.tabs(["Your Circles", "Discover", "Create"])
     
@@ -969,7 +970,7 @@ def circles_page():
             for circle in discover_circles[:5]:
                 card(
                     circle["name"],
-                    f"{circle['description']}\n\nMembers: {len(circle['members'])} â¢ Type: {circle['type'].capitalize()}",
+                    f"{circle['description']}\n\nMembers: {len(circle['members'])} • Type: {circle['type'].capitalize()}",
                     action_button="Join Circle"
                 )
     
@@ -1012,7 +1013,7 @@ def circles_page():
 def events_page():
     """Events management page"""
     generate_sample_data()
-    st.title("ð Events")
+    st.title("📅 Events")
     
     tab1, tab2, tab3 = st.tabs(["Upcoming", "Your Events", "Create"])
     
@@ -1062,10 +1063,10 @@ def events_page():
             for event in upcoming_events:
                 card(
                     event["name"],
-                    f"""ð {event['date']} at {event['time']}
-                    ð {event['location']}
-                    ð¥ {event['attendees']}/{event['capacity']} attending
-                    ð« Organized by: {event['organizer']}
+                    f"""📅 {event['date']} at {event['time']}
+                    📍 {event['location']}
+                    👥 {event['attendees']}/{event['capacity']} attending
+                    🎫 Organized by: {event['organizer']}
                     
                     {event['description']}""",
                     image=event["image"],
@@ -1099,9 +1100,9 @@ def events_page():
             for event in your_events:
                 card(
                     event["name"],
-                    f"""ð {event['date']} at {event['time']}
-                    ð« Organized by: {event['organizer']}
-                    ð¢ Status: {event['status']}""",
+                    f"""📅 {event['date']} at {event['time']}
+                    🎫 Organized by: {event['organizer']}
+                    🟢 Status: {event['status']}""",
                     action_button="View Details"
                 )
     
@@ -1129,13 +1130,14 @@ def events_page():
                         st.success(f"Event '{name}' created successfully!")
                         time.sleep(1)
                         st.rerun()
+
 def business_page():
     """Business dashboard page"""
     if st.session_state["user"]["account_type"] != "business":
         st.warning("This page is only available for business accounts")
         return
     
-    st.title("ð¼ Business Dashboard")
+    st.title("💼 Business Dashboard")
     
     tab1, tab2, tab3, tab4 = st.tabs(["Overview", "Promotions", "Analytics", "Verification"])
     
@@ -1155,7 +1157,7 @@ def business_page():
                 "Business Profile",
                 f"""Name: {business['business_name']}
                 Category: {business['category']}
-                Status: {"â Verified" if business.get('verified', False) else "â³ Pending"}""",
+                Status: {"✅ Verified" if business.get('verified', False) else "⚠️ Pending"}""",
                 action_button="Edit Profile"
             )
         
@@ -1204,9 +1206,14 @@ def business_page():
                 }
                 save_db("promotions", promotions)
                 st.success("Promotion launched successfully!")
+
 # ===== MAIN APP FUNCTION =====
 def main():
     """Main application function"""
+    # Initialize database first
+    init_db()
+    generate_sample_data()
+    
     # Initialize session state
     if "logged_in" not in st.session_state:
         st.session_state["logged_in"] = False
@@ -1224,12 +1231,12 @@ def main():
             
             # Navigation menu
             menu_options = {
-                "Home": "ð ",
-                "Explore": "ð",
-                "Media": "ð¸",
-                "Circles": "ð¥",
-                "Events": "ð",
-                "Business": "ð¼" if st.session_state["user"]["account_type"] == "business" else None
+                "Home": "🏠",
+                "Explore": "🔍",
+                "Media": "📸",
+                "Circles": "👥",
+                "Events": "📅",
+                "Business": "💼" if st.session_state["user"]["account_type"] == "business" else None
             }
             
             # Filter out None values (like Business for non-business accounts)
@@ -1240,7 +1247,7 @@ def main():
                     st.session_state["current_page"] = page
             
             st.markdown("---")
-            if st.button("ðª Logout"):
+            if st.button("🚪 Logout"):
                 st.session_state["logged_in"] = False
                 st.session_state["user"] = None
                 st.session_state["current_page"] = "Home"
@@ -1259,8 +1266,6 @@ def main():
         auth_tab = st.sidebar.radio("Navigation", ["Login", "Sign Up"], index=0 if auth_tab == "Login" else 1)
         st.session_state["auth_tab"] = auth_tab
 
-
-        
         if auth_tab == "Login":
             login_page()
         else:
