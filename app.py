@@ -747,11 +747,104 @@ def explore_page():
     st.title("🔍 Explore Our Community")
     
     # Search functionality
-    search_col, filter_col = st.columns([3, 1])
-    with search_col:
-        search_query = st.text_input("Search for circles, events, or locations")
-    with filter_col:
-        filter_type = st.selectbox("Filter", ["All", "Circles", "Events", "Locations"])
+    search_query = st.text_input("Search for circles, events, or locations")
+    
+    # Location filter
+    location = st.selectbox(
+        "Filter by Location",
+        ["All", "New York", "Dubai", "London", "Tokyo"],
+        index=1  # Default to Dubai
+    )
+    
+    # Filter events based on search and location
+    events = load_db("events")
+    circles = load_db("circles")
+    
+    filtered_events = []
+    for event in events.values():
+        # Check if event matches search query
+        matches_search = (not search_query) or (
+            search_query.lower() in event["name"].lower() or 
+            search_query.lower() in event["description"].lower()
+        )
+        
+        # Check if event matches location filter
+        matches_location = (location == "All") or (
+            "location" in event and 
+            "name" in event["location"] and 
+            location.lower() in event["location"]["name"].lower()
+        )
+        
+        if matches_search and matches_location:
+            # Get circle info for the event
+            circle = circles.get(event["circle_id"], {})
+            event_with_circle = {**event, "circle_name": circle.get("name", "")}
+            filtered_events.append(event_with_circle)
+    
+    # Display filtered events
+    st.subheader("📅 Upcoming Events")
+    if not filtered_events:
+        st.info("No events found matching your criteria")
+    else:
+        for event in filtered_events:
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                card(
+                    event["name"],
+                    f"""📅 {event['date']} at {event['time']}
+                    📍 {event['location']['name']}
+                    👥 {len(event['attendees'])} attending
+                    🎫 Circle: {event['circle_name']}
+                    
+                    {event['description']}"""
+                )
+            with col2:
+                if st.button("RSVP", key=f"rsvp_{event['event_id']}"):
+                    # Add user to event attendees
+                    events = load_db("events")
+                    if st.session_state["user"]["user_id"] not in events[event["event_id"]]["attendees"]:
+                        events[event["event_id"]]["attendees"].append(st.session_state["user"]["user_id"])
+                        save_db("events", events)
+                        st.success(f"You've RSVP'd to {event['name']}!")
+                        st.rerun()
+    
+    # Popular circles section
+    st.subheader("👥 Popular Circles")
+    all_circles = list(circles.values())
+    
+    # Filter circles based on location if specified
+    if location != "All":
+        all_circles = [c for c in all_circles 
+                      if "location" in c 
+                      and "city" in c["location"]
+                      and location.lower() in c["location"]["city"].lower()]
+    
+    # Display circles
+    for circle in all_circles[:5]:  # Show first 5 circles
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            card(
+                circle["name"],
+                f"{circle['description']}\n\n👥 {len(circle['members'])} members | 🔓 {circle['type'].capitalize()}"
+            )
+        with col2:
+            if st.button("Join Circle", key=f"join_{circle['circle_id']}"):
+                # Add the user to the circle
+                circles = load_db("circles")
+                if st.session_state["user"]["user_id"] not in circles[circle["circle_id"]]["members"]:
+                    circles[circle["circle_id"]]["members"].append(st.session_state["user"]["user_id"])
+                    save_db("circles", circles)
+                    st.success(f"You've joined {circle['name']}!")
+                    st.rerun()
+    
+    # Map view with location selector
+    st.subheader("📍 Nearby Locations")
+    # Use a placeholder image since we don't have Google Maps API key
+    st.image(
+        "https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5",
+        use_container_width=True,
+        caption=f"Map of {location if location != 'All' else 'selected locations'}"
+    )
     def google_maps_component():
     google_maps_html = """
     <!DOCTYPE html>
@@ -859,12 +952,26 @@ def explore_page():
     ]
     
     for circle in circles_data:
+    col1, col2 = st.columns([3, 1])
+    with col1:
         card(
             circle["name"],
             f"{circle['description']}\n\n👥 {circle['members']} members | 🔓 {circle['type'].capitalize()}",
-            image=circle["image"],
-            action_button="Join Circle"
+            image=circle["image"]
         )
+    with col2:
+        if st.button("Join Circle", key=f"join_{circle['name']}"):
+            # Add the user to the circle
+            circles = load_db("circles")
+            circle_id = next((c["circle_id"] for c in circles.values() if c["name"] == circle["name"]), None)
+            if circle_id:
+                if st.session_state["user"]["user_id"] not in circles[circle_id]["members"]:
+                    circles[circle_id]["members"].append(st.session_state["user"]["user_id"])
+                    save_db("circles", circles)
+                    st.success(f"You've joined {circle['name']}!")
+                    st.rerun()
+            else:
+                st.error("Circle not found in database")
     
     # Upcoming events section with sample data
     st.subheader("📅 Upcoming Events")
