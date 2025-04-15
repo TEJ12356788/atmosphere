@@ -752,7 +752,70 @@ def explore_page():
         search_query = st.text_input("Search for circles, events, or locations")
     with filter_col:
         filter_type = st.selectbox("Filter", ["All", "Circles", "Events", "Locations"])
-    
+    def google_maps_component():
+    google_maps_html = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Google Maps in Streamlit</title>
+        <script>
+            (g=>{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await (a=m.createElement("script"));e.set("libraries",[...r]+"");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src=`https://maps.${c}apis.com/maps/api/js?`+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once. Ignoring:",g):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})
+            ({key: "AIzaSyCfCnM6suRZ4HlccgH8ZI--qYB4KBQKVKw"});
+        </script>
+        <style>
+            #map {
+                height: 400px;
+                width: 100%;
+                border-radius: 8px;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="map"></div>
+        <script>
+            async function initMap() {
+                const { Map } = await google.maps.importLibrary("maps");
+                const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
+                
+                const map = new Map(document.getElementById("map"), {
+                    center: { lat: 25.2048, lng: 55.2708 }, // Dubai coordinates
+                    zoom: 12,
+                    mapId: "YOUR_MAP_ID"
+                });
+                
+                // Add Dubai landmarks
+                const landmarks = [
+                    {
+                        position: { lat: 25.1972, lng: 55.2744 },
+                        title: "Burj Khalifa",
+                        icon: "https://maps.google.com/mapfiles/ms/icons/red-dot.png"
+                    },
+                    {
+                        position: { lat: 25.1411, lng: 55.1853 },
+                        title: "Palm Jumeirah",
+                        icon: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png"
+                    },
+                    {
+                        position: { lat: 25.1215, lng: 55.1853 },
+                        title: "Dubai Marina",
+                        icon: "https://maps.google.com/mapfiles/ms/icons/green-dot.png"
+                    }
+                ];
+                
+                landmarks.forEach(landmark => {
+                    new AdvancedMarkerElement({
+                        map,
+                        position: landmark.position,
+                        title: landmark.title
+                    });
+                });
+            }
+            initMap();
+        </script>
+    </body>
+    </html>
+    """
+    html(google_maps_html, height=420)
     # Map view with location selector
     st.subheader("📍 Nearby Locations")
     location = st.selectbox(
