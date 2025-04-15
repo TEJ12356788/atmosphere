@@ -3,7 +3,7 @@ import bcrypt
 import json
 import os
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from PIL import Image
 import random
 import uuid
@@ -174,24 +174,27 @@ def load_css():
     </style>
     """, unsafe_allow_html=True)
 
-# ===== HTML COMPONENTS SECTION =====
-def card(title, content, image=None, action_button=None):
+def card(title, content, image=None, action_button=None, key=None):
     """Reusable card component with optional image and action button"""
     try:
         img_html = f'<img src="{image}" style="width:100%; border-radius:8px; margin-bottom:15px;">' if image else ''
     except:
         img_html = ''
     
-    button_html = f'<button class="card-button">{action_button}</button>' if action_button else ''
+    if key is None:
+        key = f"card_{title}_{random.randint(0, 10000)}"
     
     st.markdown(f"""
     <div class="card">
         <div class="card-title">{title}</div>
         {img_html}
         <div class="card-content">{content}</div>
-        {button_html}
     </div>
     """, unsafe_allow_html=True)
+    
+    if action_button:
+        return st.button(action_button, key=key)
+    return None
 
 def hero_section(title, subtitle, image_url):
     """Hero banner component with title and subtitle"""
@@ -223,111 +226,6 @@ def stats_card(title, value):
     """, unsafe_allow_html=True)
 
 # ===== DATABASE CONFIGURATION =====
-DB_STRUCTURE = {
-    "users": {
-        "sample_user": {
-            "user_id": "usr_123",
-            "full_name": "John Doe",
-            "email": "john@example.com",
-            "password": "<hashed_password>",
-            "account_type": "general",
-            "verified": True,
-            "joined_date": "2023-01-01",
-            "interests": ["music", "tech"],
-            "location": {"city": "New York", "lat": 40.7128, "lng": -74.0060},
-            "profile_pic": "https://randomuser.me/api/portraits/men/1.jpg"
-        }
-    },
-    "businesses": {
-        "sample_business": {
-            "business_id": "biz_123",
-            "owner_id": "usr_123",
-            "business_name": "Cool Cafe",
-            "category": "Food & Drink",
-            "verified": False,
-            "locations": [
-                {"address": "123 Main St", "lat": 40.7128, "lng": -74.0060}
-            ]
-        }
-    },
-    "media": [
-        {
-            "media_id": "med_123",
-            "user_id": "usr_123",
-            "file_path": "media_gallery/usr_123_photo1.jpg",
-            "location": {"name": "Central Park", "lat": 40.7829, "lng": -73.9654},
-            "timestamp": "2023-01-01T12:00:00",
-            "circle_id": "cir_123",
-            "tags": ["nature", "park"],
-            "reports": []
-        }
-    ],
-    "circles": {
-        "cir_123": {
-            "circle_id": "cir_123",
-            "name": "NYC Photographers",
-            "description": "For photography enthusiasts in NYC",
-            "type": "public",
-            "location": {"city": "New York", "lat": 40.7128, "lng": -74.0060},
-            "members": ["usr_123"],
-            "events": ["evt_123"],
-            "business_owned": False,
-            "created_at": "2023-01-01T10:00:00"
-        }
-    },
-    "events": {
-        "evt_123": {
-            "event_id": "evt_123",
-            "circle_id": "cir_123",
-            "name": "Sunset Photography Meetup",
-            "description": "Let's capture the sunset together!",
-            "location": {"name": "Brooklyn Bridge", "lat": 40.7061, "lng": -73.9969},
-            "date": "2023-06-15",
-            "time": "18:00",
-            "organizer": "usr_123",
-            "attendees": ["usr_123"],
-            "capacity": 20,
-            "tags": ["photography", "outdoors"],
-            "created_at": "2023-05-01T09:00:00"
-        }
-    },
-    "promotions": {
-        "promo_123": {
-            "promo_id": "promo_123",
-            "business_id": "biz_123",
-            "offer": "20% off coffee",
-            "requirements": "Post 3 photos with #CoolCafe",
-            "start_date": "2023-01-01",
-            "end_date": "2023-01-31",
-            "claimed_by": ["usr_123"],
-            "created_at": "2022-12-15T10:00:00"
-        }
-    },
-    "notifications": {
-        "usr_123": [
-            {
-                "notification_id": "notif_123",
-                "type": "event_reminder",
-                "content": "Sunset Photography Meetup starts in 2 hours!",
-                "timestamp": "2023-06-15T16:00:00",
-                "read": False,
-                "related_id": "evt_123"
-            }
-        ]
-    },
-    "reports": [
-        {
-            "report_id": "rep_123",
-            "reporter_id": "usr_123",
-            "content_id": "med_123",
-            "content_type": "media",
-            "reason": "Inappropriate content",
-            "status": "pending",
-            "timestamp": "2023-01-01T12:30:00"
-        }
-    ]
-}
-
 DB_FILES = {
     "users": "data/users.json",
     "businesses": "data/businesses.json",
@@ -343,7 +241,6 @@ MEDIA_DIR = "media_gallery"
 os.makedirs("data", exist_ok=True)
 os.makedirs(MEDIA_DIR, exist_ok=True)
 
-# ===== HELPER FUNCTIONS =====
 def init_db():
     """Initialize database files with empty structures"""
     for file_key, file_path in DB_FILES.items():
@@ -361,7 +258,6 @@ def init_db():
 def load_db(file_key, retry_count=0, max_retries=1):
     """Load database file"""
     try:
-        # Ensure the file exists first
         if not os.path.exists(DB_FILES[file_key]):
             if retry_count >= max_retries:
                 return {} if file_key in ["users", "businesses", "circles", "events", "promotions", "notifications"] else []
@@ -369,7 +265,6 @@ def load_db(file_key, retry_count=0, max_retries=1):
             
         with open(DB_FILES[file_key], "r") as f:
             data = json.load(f)
-            # Ensure the structure matches expected format
             if file_key in ["users", "businesses", "circles", "events", "promotions", "notifications"] and not isinstance(data, dict):
                 return {}
             elif file_key in ["media", "reports"] and not isinstance(data, list):
@@ -379,7 +274,7 @@ def load_db(file_key, retry_count=0, max_retries=1):
         if retry_count >= max_retries:
             st.error(f"Database error: Unable to load {file_key}. Error: {str(e)}")
             return {} if file_key in ["users", "businesses", "circles", "events", "promotions", "notifications"] else []
-        time.sleep(0.1)  # Add small delay between retries
+        time.sleep(0.1)
         init_db()
         return load_db(file_key, retry_count + 1)
 
@@ -448,10 +343,25 @@ def generate_sample_data():
             "location": {"city": "New York", "lat": 40.7128, "lng": -74.0060},
             "profile_pic": "https://randomuser.me/api/portraits/men/1.jpg"
         }
+        
+        # Add UAE sample user
+        users["uae_user"] = {
+            "user_id": "usr_124",
+            "full_name": "Ahmed Al Maktoum",
+            "email": "ahmed@example.com",
+            "password": hash_password("password123"),
+            "account_type": "general",
+            "verified": True,
+            "joined_date": datetime.now().strftime("%Y-%m-%d"),
+            "interests": ["photography", "food"],
+            "location": {"city": "Dubai", "lat": 25.2048, "lng": 55.2708},
+            "profile_pic": "https://randomuser.me/api/portraits/men/30.jpg"
+        }
         save_db("users", users)
     
     circles = load_db("circles")
     if not circles:
+        # Original circle
         circles["cir_123"] = {
             "circle_id": "cir_123",
             "name": "NYC Photographers",
@@ -463,10 +373,51 @@ def generate_sample_data():
             "business_owned": False,
             "created_at": datetime.now().isoformat()
         }
+        
+        # UAE circles
+        circles["cir_124"] = {
+            "circle_id": "cir_124",
+            "name": "Dubai Photography Enthusiasts",
+            "description": "For photography lovers in Dubai to share and learn",
+            "type": "public",
+            "location": {"city": "Dubai", "lat": 25.2048, "lng": 55.2708},
+            "members": ["usr_124"],
+            "events": ["evt_124"],
+            "business_owned": False,
+            "created_at": datetime.now().isoformat(),
+            "tags": ["photography", "dubai"]
+        }
+        
+        circles["cir_125"] = {
+            "circle_id": "cir_125",
+            "name": "Sharjah Foodies",
+            "description": "Discover and share the best food spots in Sharjah",
+            "type": "public",
+            "location": {"city": "Sharjah", "lat": 25.3463, "lng": 55.4209},
+            "members": [],
+            "events": ["evt_125"],
+            "business_owned": False,
+            "created_at": datetime.now().isoformat(),
+            "tags": ["food", "sharjah"]
+        }
+        
+        circles["cir_126"] = {
+            "circle_id": "cir_126",
+            "name": "Sheikh Zayed Road Business Network",
+            "description": "Professional networking for businesses along SZ Road",
+            "type": "private",
+            "location": {"city": "Dubai", "lat": 25.2048, "lng": 55.2708},
+            "members": [],
+            "events": [],
+            "business_owned": True,
+            "created_at": datetime.now().isoformat(),
+            "tags": ["business", "networking"]
+        }
         save_db("circles", circles)
     
     events = load_db("events")
     if not events:
+        # Original event
         events["evt_123"] = {
             "event_id": "evt_123",
             "circle_id": "cir_123",
@@ -481,9 +432,40 @@ def generate_sample_data():
             "tags": ["photography", "outdoors"],
             "created_at": datetime.now().isoformat()
         }
+        
+        # UAE events
+        events["evt_124"] = {
+            "event_id": "evt_124",
+            "circle_id": "cir_124",
+            "name": "Burj Khalifa Night Photography",
+            "description": "Night photography session at Burj Khalifa",
+            "location": {"name": "Burj Khalifa, Dubai", "lat": 25.1972, "lng": 55.2744},
+            "date": (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d"),
+            "time": "19:00",
+            "organizer": "usr_124",
+            "attendees": ["usr_124"],
+            "capacity": 15,
+            "tags": ["photography", "dubai", "landmarks"],
+            "created_at": datetime.now().isoformat()
+        }
+        
+        events["evt_125"] = {
+            "event_id": "evt_125",
+            "circle_id": "cir_125",
+            "name": "Sharjah Street Food Tour",
+            "description": "Explore hidden street food gems in Sharjah",
+            "location": {"name": "Al Qasba, Sharjah", "lat": 25.3471, "lng": 55.3913},
+            "date": (datetime.now() + timedelta(days=14)).strftime("%Y-%m-%d"),
+            "time": "18:00",
+            "organizer": "usr_124",
+            "attendees": [],
+            "capacity": 10,
+            "tags": ["food", "sharjah", "tour"],
+            "created_at": datetime.now().isoformat()
+        }
         save_db("events", events)
     
-    # Ensure sample user has notifications
+    # Ensure sample users have notifications
     notifications = load_db("notifications")
     if "usr_123" not in notifications:
         notifications["usr_123"] = [{
@@ -493,9 +475,18 @@ def generate_sample_data():
             "timestamp": datetime.now().isoformat(),
             "read": False
         }]
-        save_db("notifications", notifications)
+    
+    if "usr_124" not in notifications:
+        notifications["usr_124"] = [{
+            "notification_id": "notif_124",
+            "type": "welcome",
+            "content": "Welcome to Atmosphere! Discover events in Dubai.",
+            "timestamp": datetime.now().isoformat(),
+            "read": False
+        }]
+    
+    save_db("notifications", notifications)
 
-# ===== AUTHENTICATION PAGES =====
 def login_page():
     st.markdown("""
         <h1 class='hero-title'>Welcome to Atmosphere</h1>
@@ -532,7 +523,6 @@ def login_page():
             except Exception as e:
                 st.error(f"Something went wrong: {e}")
     with col2:
-        # Custom card layout using columns to position the button inside
         with st.container():
             st.markdown("""
                 <div class="card">
@@ -547,7 +537,6 @@ def login_page():
                 </div>
             """, unsafe_allow_html=True)
 
-            # Use an empty container with negative margin to "push" the button inside the card visually
             st.markdown("<div style='margin-top: -40px;'>", unsafe_allow_html=True)
             if st.button("🔗 Sign up now →", key="signup_now"):
                 st.session_state["auth_tab"] = "Sign Up"
@@ -659,7 +648,6 @@ def signup_page():
                         time.sleep(1)
                         st.rerun()
 
-# ===== MAIN APP PAGES =====
 def home_page():
     """Home page with user dashboard"""
     generate_sample_data()
@@ -749,12 +737,49 @@ def explore_page():
     # Search functionality
     search_query = st.text_input("Search for circles, events, or locations")
     
-    # Location filter
+    # Location filter - now with UAE focus
     location = st.selectbox(
         "Filter by Location",
-        ["All", "New York", "Dubai", "London", "Tokyo"],
+        ["All", "Dubai", "Sharjah", "Abu Dhabi", "New York", "London"],
         index=1  # Default to Dubai
     )
+    
+    # Sheikh Zayed Road Map Section
+    st.subheader("📍 Sheikh Zayed Road - Dubai's Iconic Highway")
+    st.image("https://www.dubaiapp.com/wp-content/uploads/2021/03/Sheikh-Zayed-Road-Dubai-Map.jpg",
+             use_column_width=True,
+             caption="Map of Sheikh Zayed Road with key landmarks")
+    
+    # Landmarks along Sheikh Zayed Road
+    landmarks = [
+        {
+            "name": "Burj Khalifa",
+            "description": "World's tallest building with observation decks",
+            "position": "Near Financial Centre Metro Station",
+            "image": "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=500"
+        },
+        {
+            "name": "Emirates Towers",
+            "description": "Twin office towers with a connecting podium",
+            "position": "Near World Trade Centre Metro",
+            "image": "https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?w=500"
+        },
+        {
+            "name": "Museum of the Future",
+            "description": "Iconic torus-shaped museum showcasing innovations",
+            "position": "Near Trade Centre Roundabout",
+            "image": "https://images.unsplash.com/photo-1643795788371-85c8f5e56767?w=500"
+        }
+    ]
+    
+    st.subheader("🏙️ Key Landmarks Along Sheikh Zayed Road")
+    for landmark in landmarks:
+        card(
+            landmark["name"],
+            f"{landmark['description']}\n\n📍 {landmark['position']}",
+            image=landmark["image"],
+            action_button="View Details"
+        )
     
     # Filter events based on search and location
     events = load_db("events")
@@ -787,26 +812,30 @@ def explore_page():
         st.info("No events found matching your criteria")
     else:
         for event in filtered_events:
-            col1, col2 = st.columns([3, 1])
-            with col1:
-                card(
-                    event["name"],
-                    f"""📅 {event['date']} at {event['time']}
-                    📍 {event['location']['name']}
-                    👥 {len(event['attendees'])} attending
-                    🎫 Circle: {event['circle_name']}
-                    
-                    {event['description']}"""
-                )
-            with col2:
-                if st.button("RSVP", key=f"rsvp_{event['event_id']}"):
-                    # Add user to event attendees
-                    events = load_db("events")
-                    if st.session_state["user"]["user_id"] not in events[event["event_id"]]["attendees"]:
-                        events[event["event_id"]]["attendees"].append(st.session_state["user"]["user_id"])
-                        save_db("events", events)
-                        st.success(f"You've RSVP'd to {event['name']}!")
-                        st.rerun()
+            event_details = f"""
+            **📅 Date:** {event['date']} at {event['time']}  
+            **📍 Location:** {event['location']['name']}  
+            **👥 Attendees:** {len(event['attendees'])}/{event['capacity']}  
+            **🎫 Circle:** {event.get('circle_name', 'General')}  
+            
+            {event['description']}
+            """
+            
+            if card(
+                event["name"],
+                event_details,
+                image=None,  # Could add event images if available
+                action_button="RSVP",
+                key=f"rsvp_{event['event_id']}"
+            ):
+                # Add user to event attendees
+                events = load_db("events")
+                if st.session_state["user"]["user_id"] not in events[event["event_id"]]["attendees"]:
+                    events[event["event_id"]]["attendees"].append(st.session_state["user"]["user_id"])
+                    save_db("events", events)
+                    st.success(f"You've RSVP'd to {event['name']}!")
+                    time.sleep(1)
+                    st.rerun()
     
     # Popular circles section
     st.subheader("👥 Popular Circles")
@@ -821,30 +850,23 @@ def explore_page():
     
     # Display circles
     for circle in all_circles[:5]:  # Show first 5 circles
-        col1, col2 = st.columns([3, 1])
-        with col1:
-            card(
-                circle["name"],
-                f"{circle['description']}\n\n👥 {len(circle['members'])} members | 🔓 {circle['type'].capitalize()}"
-            )
-        with col2:
-            if st.button("Join Circle", key=f"join_{circle['circle_id']}"):
-                # Add the user to the circle
-                circles = load_db("circles")
-                if st.session_state["user"]["user_id"] not in circles[circle["circle_id"]]["members"]:
-                    circles[circle["circle_id"]]["members"].append(st.session_state["user"]["user_id"])
-                    save_db("circles", circles)
-                    st.success(f"You've joined {circle['name']}!")
-                    st.rerun()
-    
-    # Map view with location selector
-    st.subheader("📍 Nearby Locations")
-    # Use a placeholder image since we don't have Google Maps API key
-    st.image(
-        "https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5",
-        use_container_width=True,
-        caption=f"Map of {location if location != 'All' else 'selected locations'}"
-    )
+        circle_details = f"{circle['description']}\n\n👥 {len(circle['members'])} members | 🔓 {circle['type'].capitalize()}"
+        
+        if card(
+            circle["name"],
+            circle_details,
+            image=None,  # Could add circle images if available
+            action_button="Join Circle",
+            key=f"join_{circle['circle_id']}"
+        ):
+            # Add the user to the circle
+            circles = load_db("circles")
+            if st.session_state["user"]["user_id"] not in circles[circle["circle_id"]]["members"]:
+                circles[circle["circle_id"]]["members"].append(st.session_state["user"]["user_id"])
+                save_db("circles", circles)
+                st.success(f"You've joined {circle['name']}!")
+                time.sleep(1)
+                st.rerun()
 
 def media_page():
     """Media upload and gallery page"""
@@ -970,11 +992,20 @@ def circles_page():
             st.info("No new circles to discover at the moment. Check back later!")
         else:
             for circle in discover_circles[:5]:
-                card(
+                if card(
                     circle["name"],
                     f"{circle['description']}\n\nMembers: {len(circle['members'])} • Type: {circle['type'].capitalize()}",
-                    action_button="Join Circle"
-                )
+                    action_button="Join Circle",
+                    key=f"join_{circle['circle_id']}"
+                ):
+                    # Add the user to the circle
+                    circles = load_db("circles")
+                    if st.session_state["user"]["user_id"] not in circles[circle["circle_id"]]["members"]:
+                        circles[circle["circle_id"]]["members"].append(st.session_state["user"]["user_id"])
+                        save_db("circles", circles)
+                        st.success(f"You've joined {circle['name']}!")
+                        time.sleep(1)
+                        st.rerun()
     
     with tab3:
         st.subheader("Create a New Circle")
@@ -1022,40 +1053,40 @@ def events_page():
     with tab1:
         st.subheader("Upcoming Events")
         
-        # Sample upcoming events data
+        # Sample upcoming events data with UAE events
         upcoming_events = [
             {
-                "name": "Sunset Photography Meetup",
-                "date": "2025-04-15",
-                "time": "18:00",
-                "location": "Brooklyn Bridge, New York",
-                "attendees": 12,
-                "capacity": 20,
-                "organizer": "Jane Doe",
-                "description": "Capture stunning sunset views from Brooklyn Bridge. All skill levels welcome!",
-                "image": "https://images.unsplash.com/photo-1496568816309-51d7c20e3b21?w=500"
-            },
-            {
-                "name": "Downtown Food Tour",
+                "name": "Sunset Photography at Burj Khalifa",
                 "date": "2025-04-18",
-                "time": "19:00",
-                "location": "Lower Manhattan",
+                "time": "18:30",
+                "location": "Burj Khalifa, Dubai",
                 "attendees": 8,
                 "capacity": 15,
-                "organizer": "Mike Chen",
-                "description": "Explore hidden culinary gems in downtown NYC",
-                "image": "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=500"
+                "organizer": "Ahmed Al Maktoum",
+                "description": "Capture stunning sunset views from the world's tallest building. All skill levels welcome!",
+                "image": "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=500"
             },
             {
-                "name": "Tech Startup Mixer",
+                "name": "Sharjah Heritage Tour",
                 "date": "2025-04-20",
-                "time": "19:30",
-                "location": "WeWork Soho",
-                "attendees": 25,
-                "capacity": 50,
-                "organizer": "Alex Johnson",
-                "description": "Network with fellow tech entrepreneurs and investors",
-                "image": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=500"
+                "time": "10:00",
+                "location": "Sharjah Heritage Area",
+                "attendees": 5,
+                "capacity": 12,
+                "organizer": "Fatima Al Qasimi",
+                "description": "Explore the rich cultural heritage of Sharjah with our guided tour.",
+                "image": "https://images.unsplash.com/photo-1582139329536-e7284fece509?w=500"
+            },
+            {
+                "name": "Sheikh Zayed Road Food Crawl",
+                "date": "2025-04-22",
+                "time": "19:00",
+                "location": "Sheikh Zayed Road, Dubai",
+                "attendees": 12,
+                "capacity": 20,
+                "organizer": "Mohammed Khan",
+                "description": "Experience the diverse culinary offerings along Dubai's most famous road.",
+                "image": "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=500"
             }
         ]
         
@@ -1063,17 +1094,25 @@ def events_page():
             st.info("No upcoming events at the moment. Check back later!")
         else:
             for event in upcoming_events:
-                card(
+                event_details = f"""
+                **📅 Date:** {event['date']} at {event['time']}  
+                **📍 Location:** {event['location']}  
+                **👥 Attendees:** {event['attendees']}/{event['capacity']}  
+                **🎫 Organizer:** {event['organizer']}  
+                
+                {event['description']}
+                """
+                
+                if card(
                     event["name"],
-                    f"""📅 {event['date']} at {event['time']}
-                    📍 {event['location']}
-                    👥 {event['attendees']}/{event['capacity']} attending
-                    🎫 Organized by: {event['organizer']}
-                    
-                    {event['description']}""",
+                    event_details,
                     image=event["image"],
-                    action_button="RSVP"
-                )
+                    action_button="RSVP",
+                    key=f"rsvp_{event['name']}"
+                ):
+                    st.success(f"You've RSVP'd to {event['name']}!")
+                    time.sleep(1)
+                    st.rerun()
     
     with tab2:
         st.subheader("Your Events")
@@ -1081,11 +1120,11 @@ def events_page():
         # Sample events you're attending
         your_events = [
             {
-                "name": "Sunset Photography Meetup",
-                "date": "2025-04-15",
-                "time": "18:00",
+                "name": "Sunset Photography at Burj Khalifa",
+                "date": "2025-04-18",
+                "time": "18:30",
                 "status": "Confirmed",
-                "organizer": "Jane Doe"
+                "organizer": "Ahmed Al Maktoum"
             },
             {
                 "name": "Central Park Picnic",
@@ -1100,13 +1139,15 @@ def events_page():
             st.info("You're not attending any events yet. Explore upcoming events!")
         else:
             for event in your_events:
-                card(
+                if card(
                     event["name"],
                     f"""📅 {event['date']} at {event['time']}
                     🎫 Organized by: {event['organizer']}
                     🟢 Status: {event['status']}""",
-                    action_button="View Details"
-                )
+                    action_button="View Details",
+                    key=f"details_{event['name']}"
+                ):
+                    st.info(f"Showing details for {event['name']}")
     
     with tab3:
         st.subheader("Create New Event")
@@ -1129,7 +1170,40 @@ def events_page():
                 
                 if st.form_submit_button("Create Event"):
                     if name:
+                        event_id = generate_id("evt")
+                        events = load_db("events")
+                        
+                        circle_id = next(c["circle_id"] for c in user_circles if c["name"] == circle)
+                        
+                        events[event_id] = {
+                            "event_id": event_id,
+                            "circle_id": circle_id,
+                            "name": name,
+                            "description": description,
+                            "location": {"name": location},
+                            "date": date.strftime("%Y-%m-%d"),
+                            "time": time.strftime("%H:%M"),
+                            "organizer": st.session_state["user"]["user_id"],
+                            "attendees": [st.session_state["user"]["user_id"]],
+                            "capacity": capacity,
+                            "created_at": datetime.now().isoformat()
+                        }
+                        
+                        # Add event to circle
+                        circles = load_db("circles")
+                        if "events" not in circles[circle_id]:
+                            circles[circle_id]["events"] = []
+                        circles[circle_id]["events"].append(event_id)
+                        
+                        save_db("events", events)
+                        save_db("circles", circles)
+                        
                         st.success(f"Event '{name}' created successfully!")
+                        add_notification(
+                            st.session_state["user"]["user_id"],
+                            "event_created",
+                            f"You created a new event: {name}"
+                        )
                         time.sleep(1)
                         st.rerun()
 
@@ -1171,7 +1245,6 @@ def business_page():
             )
         
         st.subheader("Recent Activity")
-        # Show business-related activity
         st.info("Business activity feed would appear here")
     
     with tab2:
@@ -1209,7 +1282,6 @@ def business_page():
                 save_db("promotions", promotions)
                 st.success("Promotion launched successfully!")
 
-# ===== MAIN APP FUNCTION =====
 def main():
     """Main application function"""
     # Initialize database first
