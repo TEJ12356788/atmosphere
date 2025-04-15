@@ -496,7 +496,7 @@ def login_page():
         </p>
     """, unsafe_allow_html=True)
 
-    st.image("https://images.unsplash.com/photo-1469474968028-56623f02e42e", use_column_width=True, caption="Capture the vibe with Atmosphere")
+    st.image("https://images.unsplash.com/photo-1469474968028-56623f02e42e", use_container_width=True, caption="Capture the vibe with Atmosphere")
     st.markdown("---")
 
     col1, col2 = st.columns([2, 1])
@@ -747,7 +747,7 @@ def explore_page():
     # Sheikh Zayed Road Map Section
     st.subheader("📍 Sheikh Zayed Road - Dubai's Iconic Highway")
     st.image("https://www.dubaiapp.com/wp-content/uploads/2021/03/Sheikh-Zayed-Road-Dubai-Map.jpg",
-             use_column_width=True,
+             use_container_width=True,
              caption="Map of Sheikh Zayed Road with key landmarks")
     
     # Landmarks along Sheikh Zayed Road
@@ -941,7 +941,7 @@ def media_page():
                         if os.path.exists(item["file_path"]):
                             st.image(
                                 item["file_path"], 
-                                use_column_width=True,
+                                use_container_width=True,
                                 caption=f"{item['location']['name']} • {datetime.fromisoformat(item['timestamp']).strftime('%b %d, %Y')}"
                             )
                         else:
