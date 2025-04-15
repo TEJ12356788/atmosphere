@@ -845,7 +845,7 @@ def explore_page():
         use_container_width=True,
         caption=f"Map of {location if location != 'All' else 'selected locations'}"
     )
-    def google_maps_component():
+def google_maps_component():
     google_maps_html = """
     <!DOCTYPE html>
     <html>
