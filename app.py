@@ -30,6 +30,15 @@ def load_css():
         color: var(--dark);
     }}
 
+    /* Fix for recent activity font color */
+    .activity-item {{
+        color: #212529 !important;
+    }}
+
+    .activity-item div {{
+        color: #212529 !important;
+    }}
+
     .main-container {{
         max-width: 1200px;
         margin: 0 auto;
@@ -750,49 +759,65 @@ def explore_page():
              use_container_width=True,
              caption="Map of Sheikh Zayed Road with key landmarks")
     
-    # Landmarks along Sheikh Zayed Road
-    landmarks = [
-        {
-            "name": "Burj Khalifa",
-            "description": "World's tallest building with observation decks",
-            "position": "Near Financial Centre Metro Station",
-            "image": "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=500"
-        },
-        {
-            "name": "Emirates Towers",
-            "description": "Twin office towers with a connecting podium",
-            "position": "Near World Trade Centre Metro",
-            "image": "https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?w=500"
-        },
-        {
-            "name": "Museum of the Future",
-            "description": "Iconic torus-shaped museum showcasing innovations",
-            "position": "Near Trade Centre Roundabout",
-            "image": "https://images.unsplash.com/photo-1643795788371-85c8f5e56767?w=500"
-        }
-    ]
+    # Museum of the Future section
+    st.subheader("🏛️ Museum of the Future")
+    col1, col2 = st.columns([1, 2])
+    with col1:
+        st.image("https://images.unsplash.com/photo-1643795788371-85c8f5e56767",
+                 use_container_width=True,
+                 caption="Museum of the Future - Dubai")
+    with col2:
+        st.markdown("""
+        <div style="padding:15px;">
+            <h3>About the Museum</h3>
+            <p>The Museum of the Future is an exhibition space for innovative and futuristic ideologies, 
+            services, and products. Located in the Financial District of Dubai, UAE, the museum has 
+            been described as the most beautiful building on earth.</p>
+            <p><strong>Location:</strong> Sheikh Zayed Road, Trade Centre 2, Dubai</p>
+            <p><strong>Opening Hours:</strong> 10AM - 6PM daily</p>
+        </div>
+        """, unsafe_allow_html=True)
     
-    st.subheader("🏙️ Key Landmarks Along Sheikh Zayed Road")
-    for landmark in landmarks:
-        card(
-            landmark["name"],
-            f"{landmark['description']}\n\n📍 {landmark['position']}",
-            image=landmark["image"],
-            action_button="View Details"
-        )
-    
-    # Filter events based on search and location
-    events = load_db("events")
+    # Popular circles section with join functionality
+    st.subheader("👥 Popular Circles in Dubai")
     circles = load_db("circles")
+    
+    # Filter circles based on location if specified
+    if location != "All":
+        circles = [c for c in circles.values() 
+                  if "location" in c 
+                  and "city" in c["location"]
+                  and location.lower() in c["location"]["city"].lower()]
+    
+    # Display 3 popular circles
+    cols = st.columns(3)
+    for i, circle in enumerate(list(circles.values())[:3]):
+        with cols[i]:
+            with st.container():
+                st.markdown(f"""
+                <div class="card" style="height:100%;">
+                    <div class="card-title">{circle['name']}</div>
+                    <p>{circle['description']}</p>
+                    <p><small>👥 {len(circle['members'])} members</small></p>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                if st.button("Join Circle", key=f"join_{circle['circle_id']}"):
+                    # Add the user to the circle
+                    circles_db = load_db("circles")
+                    if st.session_state["user"]["user_id"] not in circles_db[circle["circle_id"]]["members"]:
+                        circles_db[circle["circle_id"]]["members"].append(st.session_state["user"]["user_id"])
+                        save_db("circles", circles_db)
+                        st.success(f"You've joined {circle['name']}!")
+                        time.sleep(1)
+                        st.rerun()
+    
+    # Upcoming events section
+    st.subheader("📅 Upcoming Events in Dubai")
+    events = load_db("events")
     
     filtered_events = []
     for event in events.values():
-        # Check if event matches search query
-        matches_search = (not search_query) or (
-            search_query.lower() in event["name"].lower() or 
-            search_query.lower() in event["description"].lower()
-        )
-        
         # Check if event matches location filter
         matches_location = (location == "All") or (
             "location" in event and 
@@ -800,73 +825,40 @@ def explore_page():
             location.lower() in event["location"]["name"].lower()
         )
         
-        if matches_search and matches_location:
-            # Get circle info for the event
-            circle = circles.get(event["circle_id"], {})
-            event_with_circle = {**event, "circle_name": circle.get("name", "")}
-            filtered_events.append(event_with_circle)
+        if matches_location:
+            filtered_events.append(event)
     
-    # Display filtered events
-    st.subheader("📅 Upcoming Events")
+    # Display 2 upcoming events
     if not filtered_events:
         st.info("No events found matching your criteria")
     else:
-        for event in filtered_events:
-            event_details = f"""
-            **📅 Date:** {event['date']} at {event['time']}  
-            **📍 Location:** {event['location']['name']}  
-            **👥 Attendees:** {len(event['attendees'])}/{event['capacity']}  
-            **🎫 Circle:** {event.get('circle_name', 'General')}  
-            
-            {event['description']}
-            """
-            
-            if card(
-                event["name"],
-                event_details,
-                image=None,  # Could add event images if available
-                action_button="RSVP",
-                key=f"rsvp_{event['event_id']}"
-            ):
-                # Add user to event attendees
-                events = load_db("events")
-                if st.session_state["user"]["user_id"] not in events[event["event_id"]]["attendees"]:
-                    events[event["event_id"]]["attendees"].append(st.session_state["user"]["user_id"])
-                    save_db("events", events)
-                    st.success(f"You've RSVP'd to {event['name']}!")
-                    time.sleep(1)
-                    st.rerun()
-    
-    # Popular circles section
-    st.subheader("👥 Popular Circles")
-    all_circles = list(circles.values())
-    
-    # Filter circles based on location if specified
-    if location != "All":
-        all_circles = [c for c in all_circles 
-                      if "location" in c 
-                      and "city" in c["location"]
-                      and location.lower() in c["location"]["city"].lower()]
-    
-    # Display circles
-    for circle in all_circles[:5]:  # Show first 5 circles
-        circle_details = f"{circle['description']}\n\n👥 {len(circle['members'])} members | 🔓 {circle['type'].capitalize()}"
-        
-        if card(
-            circle["name"],
-            circle_details,
-            image=None,  # Could add circle images if available
-            action_button="Join Circle",
-            key=f"join_{circle['circle_id']}"
-        ):
-            # Add the user to the circle
-            circles = load_db("circles")
-            if st.session_state["user"]["user_id"] not in circles[circle["circle_id"]]["members"]:
-                circles[circle["circle_id"]]["members"].append(st.session_state["user"]["user_id"])
-                save_db("circles", circles)
-                st.success(f"You've joined {circle['name']}!")
-                time.sleep(1)
-                st.rerun()
+        cols = st.columns(2)
+        for i, event in enumerate(filtered_events[:2]):
+            with cols[i]:
+                event_details = f"""
+                **📅 Date:** {event['date']} at {event['time']}  
+                **📍 Location:** {event['location']['name']}  
+                **👥 Attendees:** {len(event['attendees'])}/{event['capacity']}  
+                
+                {event['description']}
+                """
+                
+                st.markdown(f"""
+                <div class="card">
+                    <div class="card-title">{event['name']}</div>
+                    <div class="card-content">{event_details}</div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                if st.button("RSVP", key=f"rsvp_{event['event_id']}"):
+                    # Add user to event attendees
+                    events = load_db("events")
+                    if st.session_state["user"]["user_id"] not in events[event["event_id"]]["attendees"]:
+                        events[event["event_id"]]["attendees"].append(st.session_state["user"]["user_id"])
+                        save_db("events", events)
+                        st.success(f"You've RSVP'd to {event['name']}!")
+                        time.sleep(1)
+                        st.rerun()
 
 def media_page():
     """Media upload and gallery page"""
@@ -1053,7 +1045,7 @@ def events_page():
     with tab1:
         st.subheader("Upcoming Events")
         
-        # Sample upcoming events data with UAE events
+        # Enhanced upcoming events with UAE focus
         upcoming_events = [
             {
                 "name": "Sunset Photography at Burj Khalifa",
@@ -1064,29 +1056,36 @@ def events_page():
                 "capacity": 15,
                 "organizer": "Ahmed Al Maktoum",
                 "description": "Capture stunning sunset views from the world's tallest building. All skill levels welcome!",
-                "image": "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=500"
+                "image": "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=500",
+                "details": """
+                    <h3>Event Details</h3>
+                    <p><strong>Date:</strong> April 18, 2025 at 6:30 PM</p>
+                    <p><strong>Meeting Point:</strong> Burj Khalifa Observation Deck Entrance</p>
+                    <p><strong>What to Bring:</strong> Camera (any type), tripod (optional), comfortable shoes</p>
+                    <p><strong>Price:</strong> AED 150 (includes observation deck ticket)</p>
+                    <img src="https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=800" style="width:100%; border-radius:8px; margin:10px 0;">
+                    <p>This workshop will guide you through the best techniques for capturing Dubai's famous sunsets from the world's tallest building. Our professional photographer will provide tips on composition, exposure, and post-processing.</p>
+                """
             },
             {
-                "name": "Sharjah Heritage Tour",
+                "name": "Museum of the Future Tech Tour",
                 "date": "2025-04-20",
-                "time": "10:00",
-                "location": "Sharjah Heritage Area",
-                "attendees": 5,
-                "capacity": 12,
-                "organizer": "Fatima Al Qasimi",
-                "description": "Explore the rich cultural heritage of Sharjah with our guided tour.",
-                "image": "https://images.unsplash.com/photo-1582139329536-e7284fece509?w=500"
-            },
-            {
-                "name": "Sheikh Zayed Road Food Crawl",
-                "date": "2025-04-22",
-                "time": "19:00",
-                "location": "Sheikh Zayed Road, Dubai",
+                "time": "14:00",
+                "location": "Museum of the Future, Dubai",
                 "attendees": 12,
                 "capacity": 20,
-                "organizer": "Mohammed Khan",
-                "description": "Experience the diverse culinary offerings along Dubai's most famous road.",
-                "image": "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=500"
+                "organizer": "Tech Explorers UAE",
+                "description": "Exclusive guided tour of Dubai's iconic Museum of the Future with tech experts",
+                "image": "https://images.unsplash.com/photo-1643795788371-85c8f5e56767?w=500",
+                "details": """
+                    <h3>Event Details</h3>
+                    <p><strong>Date:</strong> April 20, 2025 at 2:00 PM</p>
+                    <p><strong>Meeting Point:</strong> Museum of the Future Main Entrance</p>
+                    <p><strong>Duration:</strong> Approximately 2 hours</p>
+                    <p><strong>Price:</strong> AED 200 (includes museum admission)</p>
+                    <img src="https://images.unsplash.com/photo-1643795788371-85c8f5e56767?w=800" style="width:100%; border-radius:8px; margin:10px 0;">
+                    <p>Join our expert-led tour of the Museum of the Future, where we'll explore the most innovative exhibits and discuss the future of technology. This is a unique opportunity to gain insights not available on regular tours.</p>
+                """
             }
         ]
         
@@ -1103,16 +1102,30 @@ def events_page():
                 {event['description']}
                 """
                 
-                if card(
-                    event["name"],
-                    event_details,
-                    image=event["image"],
-                    action_button="RSVP",
-                    key=f"rsvp_{event['name']}"
-                ):
+                col1, col2 = st.columns([3, 1])
+                with col1:
+                    st.markdown(f"""
+                    <div class="card">
+                        <div class="card-title">{event['name']}</div>
+                        <div class="card-content">{event_details}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                with col2:
+                    if event.get('image'):
+                        st.image(event['image'], use_column_width=True)
+                
+                # View Details button with expanded details
+                if st.button(f"View Details for {event['name']}", key=f"details_{event['name']}"):
+                    st.markdown(event['details'], unsafe_allow_html=True)
+                
+                # RSVP button
+                if st.button("RSVP", key=f"rsvp_{event['name']}"):
                     st.success(f"You've RSVP'd to {event['name']}!")
                     time.sleep(1)
                     st.rerun()
+                
+                st.markdown("---")
     
     with tab2:
         st.subheader("Your Events")
@@ -1127,11 +1140,11 @@ def events_page():
                 "organizer": "Ahmed Al Maktoum"
             },
             {
-                "name": "Central Park Picnic",
-                "date": "2025-04-10",
-                "time": "12:00",
-                "status": "Completed",
-                "organizer": "Sarah Williams"
+                "name": "Museum of the Future Tech Tour",
+                "date": "2025-04-20",
+                "time": "14:00",
+                "status": "Confirmed",
+                "organizer": "Tech Explorers UAE"
             }
         ]
         
@@ -1147,7 +1160,15 @@ def events_page():
                     action_button="View Details",
                     key=f"details_{event['name']}"
                 ):
-                    st.info(f"Showing details for {event['name']}")
+                    st.markdown(f"""
+                    <div style="padding:15px; background-color:#f8f9fa; border-radius:8px; margin-top:10px;">
+                        <h4>Event Details</h4>
+                        <p><strong>Name:</strong> {event['name']}</p>
+                        <p><strong>Date:</strong> {event['date']} at {event['time']}</p>
+                        <p><strong>Organizer:</strong> {event['organizer']}</p>
+                        <p><strong>Status:</strong> {event['status']}</p>
+                    </div>
+                    """, unsafe_allow_html=True)
     
     with tab3:
         st.subheader("Create New Event")
