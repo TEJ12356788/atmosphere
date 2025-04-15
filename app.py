@@ -927,7 +927,7 @@ def google_maps_component():
     # Popular circles section with sample data
     st.subheader("👥 Popular Circles")
     
-    circles_data = [
+circles_data = [
         {
             "name": "NYC Photographers",
             "description": "For photography enthusiasts in NYC. Weekly photo walks and editing workshops.",
@@ -951,7 +951,7 @@ def google_maps_component():
         }
     ]
     
-    for circle in circles_data:
+for circle in circles_data:
     col1, col2 = st.columns([3, 1])
     with col1:
         card(
