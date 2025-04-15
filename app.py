@@ -1230,28 +1230,28 @@ def main():
             st.markdown(f"**Welcome, {st.session_state['user']['full_name'].split()[0]}!**")
             
             # Navigation menu
+            # In the main() function, replace the menu_options dictionary with:
             menu_options = {
-                "Home": "🏠",
-                "Explore": "🔍",
-                "Media": "📸",
-                "Circles": "👥",
-                "Events": "📅",
-                "Business": "💼" if st.session_state["user"]["account_type"] == "business" else None
+            "Home": "🏠 Home",
+            "Explore": "🔍 Explore",
+            "Media": "📸 Media",
+            "Circles": "👥 Circles",
+            "Events": "📅 Events",
+            "Business": "💼 Business" if st.session_state["user"]["account_type"] == "business" else None
             }
-            
             # Filter out None values (like Business for non-business accounts)
             menu_options = {k: v for k, v in menu_options.items() if v is not None}
             
-            for page, icon in menu_options.items():
-                if st.button(f"{icon} {page}"):
-                    st.session_state["current_page"] = page
+            for page, label in menu_options.items():
+               if label is not None and st.button(label):
+               st.session_state["current_page"] = page
             
             st.markdown("---")
             if st.button("🚪 Logout"):
-                st.session_state["logged_in"] = False
-                st.session_state["user"] = None
-                st.session_state["current_page"] = "Home"
-                st.rerun()
+               st.session_state["logged_in"] = False
+               st.session_state["user"] = None
+               st.session_state["current_page"] = "Home"
+               st.rerun()
             
             # User profile
             st.markdown("---")
