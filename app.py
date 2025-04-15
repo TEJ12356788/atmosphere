@@ -1244,9 +1244,9 @@ def main():
             
             for page, label in menu_options.items():
                if label is not None and st.button(label):
-               st.session_state["current_page"] = page
+                  st.session_state["current_page"] = page
             
-            st.markdown("---")
+               st.markdown("---")
             if st.button("🚪 Logout"):
                st.session_state["logged_in"] = False
                st.session_state["user"] = None
