@@ -845,174 +845,6 @@ def explore_page():
         use_container_width=True,
         caption=f"Map of {location if location != 'All' else 'selected locations'}"
     )
-def google_maps_component():
-    google_maps_html = """
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>Google Maps in Streamlit</title>
-        <script>
-            (g=>{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await (a=m.createElement("script"));e.set("libraries",[...r]+"");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src=`https://maps.${c}apis.com/maps/api/js?`+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once. Ignoring:",g):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})
-            ({key: "AIzaSyCfCnM6suRZ4HlccgH8ZI--qYB4KBQKVKw"});
-        </script>
-        <style>
-            #map {
-                height: 400px;
-                width: 100%;
-                border-radius: 8px;
-            }
-        </style>
-    </head>
-    <body>
-        <div id="map"></div>
-        <script>
-            async function initMap() {
-                const { Map } = await google.maps.importLibrary("maps");
-                const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
-                
-                const map = new Map(document.getElementById("map"), {
-                    center: { lat: 25.2048, lng: 55.2708 }, // Dubai coordinates
-                    zoom: 12,
-                    mapId: "YOUR_MAP_ID"
-                });
-                
-                // Add Dubai landmarks
-                const landmarks = [
-                    {
-                        position: { lat: 25.1972, lng: 55.2744 },
-                        title: "Burj Khalifa",
-                        icon: "https://maps.google.com/mapfiles/ms/icons/red-dot.png"
-                    },
-                    {
-                        position: { lat: 25.1411, lng: 55.1853 },
-                        title: "Palm Jumeirah",
-                        icon: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png"
-                    },
-                    {
-                        position: { lat: 25.1215, lng: 55.1853 },
-                        title: "Dubai Marina",
-                        icon: "https://maps.google.com/mapfiles/ms/icons/green-dot.png"
-                    }
-                ];
-                
-                landmarks.forEach(landmark => {
-                    new AdvancedMarkerElement({
-                        map,
-                        position: landmark.position,
-                        title: landmark.title
-                    });
-                });
-            }
-            initMap();
-        </script>
-    </body>
-    </html>
-    """
-    html(google_maps_html, height=420)
-    # Map view with location selector
-    st.subheader("📍 Nearby Locations")
-    location = st.selectbox(
-        "Select Location",
-        ["New York", "Dubai", "London", "Tokyo"],
-        index=1  # Default to Dubai
-    )
-    
-    # Use a placeholder image since we don't have Google Maps API key
-    st.image(
-        "https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5",
-        use_column_width=True,
-        caption=f"Map of {location}"
-    )
-    
-    # Popular circles section with sample data
-    st.subheader("👥 Popular Circles")
-    
-circles_data = [
-        {
-            "name": "NYC Photographers",
-            "description": "For photography enthusiasts in NYC. Weekly photo walks and editing workshops.",
-            "members": 327,
-            "type": "public",
-            "image": "https://images.unsplash.com/photo-1496568816309-51d7c20e3b21?w=500"
-        },
-        {
-            "name": "Dubai Food Lovers",
-            "description": "Discover hidden culinary gems across Dubai. Restaurant reviews and food tours.",
-            "members": 215,
-            "type": "public",
-            "image": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=500"
-        },
-        {
-            "name": "Tech Entrepreneurs UAE",
-            "description": "Network with startup founders and tech professionals in the UAE.",
-            "members": 183,
-            "type": "private",
-            "image": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=500"
-        }
-    ]
-    
-for circle in circles_data:
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        card(
-            circle["name"],
-            f"{circle['description']}\n\n👥 {circle['members']} members | 🔓 {circle['type'].capitalize()}",
-            image=circle["image"]
-        )
-    with col2:
-        if st.button("Join Circle", key=f"join_{circle['name']}"):
-            # Add the user to the circle
-            circles = load_db("circles")
-            circle_id = next((c["circle_id"] for c in circles.values() if c["name"] == circle["name"]), None)
-            if circle_id:
-                if st.session_state["user"]["user_id"] not in circles[circle_id]["members"]:
-                    circles[circle_id]["members"].append(st.session_state["user"]["user_id"])
-                    save_db("circles", circles)
-                    st.success(f"You've joined {circle['name']}!")
-                    st.rerun()
-            else:
-                st.error("Circle not found in database")
-    
-    # Upcoming events section with sample data
-    st.subheader("📅 Upcoming Events")
-    
-    events_data = [
-        {
-            "name": "Sunset Photography at Burj Khalifa",
-            "date": "2025-04-15",
-            "time": "17:30",
-            "location": "Burj Khalifa, Dubai",
-            "description": "Capture stunning sunset views from the world's tallest building. Tripods recommended.",
-            "image": "https://images.unsplash.com/photo-1518684079-3c830dcef090?w=500"
-        },
-        {
-            "name": "Dubai Marina Food Tour",
-            "date": "2025-04-18",
-            "time": "19:00",
-            "location": "Dubai Marina Walk",
-            "description": "Sample cuisine from 5 different restaurants along the marina.",
-            "image": "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=500"
-        },
-        {
-            "name": "Startup Pitch Night",
-            "date": "2025-04-22",
-            "time": "18:30",
-            "location": "DIFC Innovation Hub",
-            "description": "Watch 10 emerging startups pitch to investors. Networking drinks included.",
-            "image": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=500"
-        }
-    ]
-    
-    for event in events_data:
-        card(
-            event["name"],
-            f"""📅 {event['date']} at {event['time']}
-            📍 {event['location']}
-            
-            {event['description']}""",
-            image=event["image"],
-            action_button="RSVP"
-        )
 
 def media_page():
     """Media upload and gallery page"""
@@ -1400,28 +1232,25 @@ def main():
             st.markdown(f"**Welcome, {st.session_state['user']['full_name'].split()[0]}!**")
             
             # Navigation menu
-            # In the main() function, replace the menu_options dictionary with:
             menu_options = {
-            "Home": "🏠 Home",
-            "Explore": "🔍 Explore",
-            "Media": "📸 Media",
-            "Circles": "👥 Circles",
-            "Events": "📅 Events",
-            "Business": "💼 Business" if st.session_state["user"]["account_type"] == "business" else None
+                "Home": "🏠 Home",
+                "Explore": "🔍 Explore",
+                "Media": "📸 Media",
+                "Circles": "👥 Circles",
+                "Events": "📅 Events",
+                "Business": "💼 Business" if st.session_state["user"]["account_type"] == "business" else None
             }
-            # Filter out None values (like Business for non-business accounts)
-            menu_options = {k: v for k, v in menu_options.items() if v is not None}
             
             for page, label in menu_options.items():
-               if label is not None and st.button(label):
-                  st.session_state["current_page"] = page
+                if label is not None and st.button(label):
+                    st.session_state["current_page"] = page
             
-               st.markdown("---")
+            st.markdown("---")
             if st.button("🚪 Logout"):
-               st.session_state["logged_in"] = False
-               st.session_state["user"] = None
-               st.session_state["current_page"] = "Home"
-               st.rerun()
+                st.session_state["logged_in"] = False
+                st.session_state["user"] = None
+                st.session_state["current_page"] = "Home"
+                st.rerun()
             
             # User profile
             st.markdown("---")
