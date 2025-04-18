@@ -745,15 +745,13 @@ def explore_page():
     
     # Sheikh Zayed Road Map Section
     st.subheader("📍 Sheikh Zayed Road - Dubai's Iconic Highway")
-    show_image("images/shelkhzayed.png",  # Updated file name
-              "Map of Sheikh Zayed Road with key landmarks")
+    st.image("images/shelkhzayed.png", caption="Map of Sheikh Zayed Road with key landmarks")
     
     # Museum of the Future section
     st.subheader("🏛️ Museum of the Future")
     col1, col2 = st.columns([1, 2])
     with col1:
-        show_image("images/museumoffuture.webp",  # Updated file name and format
-                 "Museum of the Future - Dubai")
+        st.image("images/museumoffuture.webp", caption="Museum of the Future - Dubai")
     with col2:
         st.markdown("""
         <div style="padding:15px;">
@@ -795,7 +793,7 @@ def explore_page():
     cols = st.columns(2)
     for i, circle in enumerate(circles):
         with cols[i % 2]:
-            show_image(circle["image"], width=300)
+            st.image(circle["image"], width=300)
             st.markdown(f"""
             <div class="card">
                 <h3>{circle['name']}</h3>
@@ -823,7 +821,7 @@ def explore_page():
     ]
     
     for event in events:
-        show_image(event["image"], width=500)
+        st.image(event["image"], width=500)
         st.markdown(f"""
         <div class="event-card">
             <h3>{event['name']}</h3>
@@ -833,75 +831,6 @@ def explore_page():
         """, unsafe_allow_html=True)
         if st.button("RSVP", key=f"rsvp_{event['name']}"):
             st.success(f"RSVP confirmed for {event['name']}!")
-
-def show_image(image_path, caption="", width=None):
-    """Improved image display function with error handling"""
-    try:
-        from PIL import Image
-        img = Image.open(image_path)
-        st.image(img, 
-                caption=caption, 
-                use_container_width=True if width is None else False,
-                width=width)
-    except Exception as e:
-        st.error(f"Error loading image: {str(e)}")
-        st.warning(f"Could not display: {image_path}")
-                if st.button("Join Circle", key=f"join_{circle['circle_id']}_{i}"):
-                    # Add the user to the circle
-                    circles_db = load_db("circles")
-                    if st.session_state["user"]["user_id"] not in circles_db[circle["circle_id"]].get("members", []):
-                        circles_db[circle["circle_id"]].setdefault("members", []).append(st.session_state["user"]["user_id"])
-                        save_db("circles", circles_db)
-                        st.success(f"You've joined {circle['name']}!")
-                        time.sleep(1)
-                        st.rerun()
-    # Upcoming events section
-    st.subheader("📅 Upcoming Events in Dubai")
-    events = load_db("events")
-    
-    filtered_events = []
-    for event in events.values():
-        # Check if event matches location filter
-        matches_location = (location == "All") or (
-            "location" in event and 
-            "name" in event["location"] and 
-            location.lower() in event["location"]["name"].lower()
-        )
-        
-        if matches_location:
-            filtered_events.append(event)
-    
-    # Display 2 upcoming events
-    if not filtered_events:
-        st.info("No events found matching your criteria")
-    else:
-        cols = st.columns(2)
-        for i, event in enumerate(filtered_events[:2]):
-            with cols[i]:
-                event_details = f"""
-                **📅 Date:** {event['date']} at {event['time']}  
-                **📍 Location:** {event['location']['name']}  
-                **👥 Attendees:** {len(event['attendees'])}/{event['capacity']}  
-                
-                {event['description']}
-                """
-                
-                st.markdown(f"""
-                <div class="card">
-                    <div class="card-title">{event['name']}</div>
-                    <div class="card-content">{event_details}</div>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                if st.button("RSVP", key=f"rsvp_{event['event_id']}"):
-                    # Add user to event attendees
-                    events = load_db("events")
-                    if st.session_state["user"]["user_id"] not in events[event["event_id"]]["attendees"]:
-                        events[event["event_id"]]["attendees"].append(st.session_state["user"]["user_id"])
-                        save_db("events", events)
-                        st.success(f"You've RSVP'd to {event['name']}!")
-                        time.sleep(1)
-                        st.rerun()
 
 def media_page():
     """Media upload and gallery page"""
