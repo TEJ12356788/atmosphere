@@ -1113,7 +1113,7 @@ def events_page():
                 
                 with col2:
                     if event.get('image'):
-                        st.image(event['image'], use_column_width=True)
+                        st.image(event['image'], use_container_width=True)
                 
                 # View Details button with expanded details
                 if st.button(f"View Details for {event['name']}", key=f"details_{event['name']}"):
@@ -1321,7 +1321,7 @@ def main():
     # Sidebar navigation
     if st.session_state["logged_in"]:
         with st.sidebar:
-            st.image("https://via.placeholder.com/150x50?text=Atmosphere", width=150)
+            st.image("https://via.placeholder.com/150x50?text=Atmosphere", use_container_width=True)
             st.markdown(f"**Welcome, {st.session_state['user']['full_name'].split()[0]}!**")
             
             # Navigation menu
