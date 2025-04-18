@@ -780,38 +780,38 @@ def explore_page():
     
     # Popular circles section with join functionality
     st.subheader("👥 Popular Circles in Dubai")
-    circles = load_db("circles")
+    circles_db = load_db("circles")
+    circles = list(circles_db.values()) if isinstance(circles_db, dict) else circles_db
     
     # Filter circles based on location if specified
     if location != "All":
-        circles = [c for c in circles.values() 
+        circles = [c for c in circles 
                   if "location" in c 
                   and "city" in c["location"]
                   and location.lower() in c["location"]["city"].lower()]
     
     # Display 3 popular circles
     cols = st.columns(3)
-    for i, circle in enumerate(list(circles.values())[:3]):
+    for i, circle in enumerate(circles[:3]):
         with cols[i]:
             with st.container():
                 st.markdown(f"""
                 <div class="card" style="height:100%;">
                     <div class="card-title">{circle['name']}</div>
                     <p>{circle['description']}</p>
-                    <p><small>👥 {len(circle['members'])} members</small></p>
+                    <p><small>👥 {len(circle.get('members', []))} members</small></p>
                 </div>
                 """, unsafe_allow_html=True)
                 
-                if st.button("Join Circle", key=f"join_{circle['circle_id']}"):
+                if st.button("Join Circle", key=f"join_{circle['circle_id']}_{i}"):
                     # Add the user to the circle
                     circles_db = load_db("circles")
-                    if st.session_state["user"]["user_id"] not in circles_db[circle["circle_id"]]["members"]:
-                        circles_db[circle["circle_id"]]["members"].append(st.session_state["user"]["user_id"])
+                    if st.session_state["user"]["user_id"] not in circles_db[circle["circle_id"]].get("members", []):
+                        circles_db[circle["circle_id"]].setdefault("members", []).append(st.session_state["user"]["user_id"])
                         save_db("circles", circles_db)
                         st.success(f"You've joined {circle['name']}!")
                         time.sleep(1)
                         st.rerun()
-    
     # Upcoming events section
     st.subheader("📅 Upcoming Events in Dubai")
     events = load_db("events")
