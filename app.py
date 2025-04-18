@@ -743,29 +743,17 @@ def explore_page():
     generate_sample_data()
     st.title("🔍 Explore Our Community")
     
-    # Search functionality
-    search_query = st.text_input("Search for circles, events, or locations")
-    
-    # Location filter - now with UAE focus
-    location = st.selectbox(
-        "Filter by Location",
-        ["All", "Dubai", "Sharjah", "Abu Dhabi", "New York", "London"],
-        index=1  # Default to Dubai
-    )
-    
     # Sheikh Zayed Road Map Section
     st.subheader("📍 Sheikh Zayed Road - Dubai's Iconic Highway")
-    st.image("https://www.dubaiapp.com/wp-content/uploads/2021/03/Sheikh-Zayed-Road-Dubai-Map.jpg",
-             use_container_width=True,
-             caption="Map of Sheikh Zayed Road with key landmarks")
+    show_image("images/shelkhzayed.png",  # Updated file name
+              "Map of Sheikh Zayed Road with key landmarks")
     
     # Museum of the Future section
     st.subheader("🏛️ Museum of the Future")
     col1, col2 = st.columns([1, 2])
     with col1:
-        st.image("https://images.unsplash.com/photo-1643795788371-85c8f5e56767",
-                 use_container_width=True,
-                 caption="Museum of the Future - Dubai")
+        show_image("images/museumoffuture.webp",  # Updated file name and format
+                 "Museum of the Future - Dubai")
     with col2:
         st.markdown("""
         <div style="padding:15px;">
@@ -777,32 +765,87 @@ def explore_page():
             <p><strong>Opening Hours:</strong> 10AM - 6PM daily</p>
         </div>
         """, unsafe_allow_html=True)
+
+    # Popular circles section
+    st.subheader("👥 Popular Circles")
+    circles = [
+        {
+            "name": "NYC Photographers",
+            "image": "images/nycphotography.jpg",
+            "description": "For photography enthusiasts in NYC"
+        },
+        {
+            "name": "Dubai Photography Enthusiasts", 
+            "image": "images/photographygroup.jpg",
+            "description": "For photography lovers in Dubai"
+        },
+        {
+            "name": "Sharjah Foodies",
+            "image": "images/foodies.jpg",
+            "description": "Discover the best food spots in Sharjah"
+        },
+        {
+            "name": "Business Network",
+            "image": "images/businessnetworks.webp",
+            "description": "Professional networking group"
+        }
+    ]
     
-    # Popular circles section with join functionality
-    st.subheader("👥 Popular Circles in Dubai")
-    circles_db = load_db("circles")
-    circles = list(circles_db.values()) if isinstance(circles_db, dict) else circles_db
-    
-    # Filter circles based on location if specified
-    if location != "All":
-        circles = [c for c in circles 
-                  if "location" in c 
-                  and "city" in c["location"]
-                  and location.lower() in c["location"]["city"].lower()]
-    
-    # Display 3 popular circles
-    cols = st.columns(3)
-    for i, circle in enumerate(circles[:3]):
-        with cols[i]:
-            with st.container():
-                st.markdown(f"""
-                <div class="card" style="height:100%;">
-                    <div class="card-title">{circle['name']}</div>
-                    <p>{circle['description']}</p>
-                    <p><small>👥 {len(circle.get('members', []))} members</small></p>
-                </div>
-                """, unsafe_allow_html=True)
+    # Display circles in columns
+    cols = st.columns(2)
+    for i, circle in enumerate(circles):
+        with cols[i % 2]:
+            show_image(circle["image"], width=300)
+            st.markdown(f"""
+            <div class="card">
+                <h3>{circle['name']}</h3>
+                <p>{circle['description']}</p>
+            </div>
+            """, unsafe_allow_html=True)
+            if st.button("Join Circle", key=f"join_{i}"):
+                st.success(f"You joined {circle['name']}!")
                 
+    # Events section
+    st.subheader("📅 Upcoming Events")
+    events = [
+        {
+            "name": "Burj Khalifa Sunset Photography",
+            "image": "images/buijkhalifasunset.jpg",
+            "date": "2023-11-15 at 18:00",
+            "location": "Burj Khalifa, Dubai"
+        },
+        {
+            "name": "Museum of the Future Tour", 
+            "image": "images/buijkhalifa.avif",
+            "date": "2023-11-20 at 14:00",
+            "location": "Museum of the Future"
+        }
+    ]
+    
+    for event in events:
+        show_image(event["image"], width=500)
+        st.markdown(f"""
+        <div class="event-card">
+            <h3>{event['name']}</h3>
+            <p>📅 {event['date']}</p>
+            <p>📍 {event['location']}</p>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("RSVP", key=f"rsvp_{event['name']}"):
+            st.success(f"RSVP confirmed for {event['name']}!")
+
+def show_image(image_path, caption="", width=None):
+    """Improved image display function with error handling"""
+    try:
+        from PIL import Image
+        img = Image.open(image_path)
+        st.image(img, 
+                caption=caption, 
+                use_container_width=True if width is None else False,
+                width=width)
+    except Exception as e:
+        st.error(f"Error loading image: {str(e)}")
+        st.warning(f"Could not display: {image_path}")
                 if st.button("Join Circle", key=f"join_{circle['circle_id']}_{i}"):
                     # Add the user to the circle
                     circles_db = load_db("circles")
