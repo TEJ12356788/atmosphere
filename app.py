@@ -207,15 +207,27 @@ def card(title, content, image=None, action_button=None, key=None):
 
 def hero_section(title, subtitle, image_url):
     """Hero banner component with title and subtitle"""
-    st.markdown(f"""
-    <div class="hero-container">
-        <img src="{image_url}" style="width:100%; border-radius:8px;">
-        <div class="hero-text">
-            <h1 class="hero-title">{title}</h1>
-            <p>{subtitle}</p>
+    try:
+        # Check if image_url is accessible before using it
+        st.markdown(f"""
+        <div class="hero-container">
+            <img src="{image_url}" style="width:100%; border-radius:8px;">
+            <div class="hero-text">
+                <h1 class="hero-title">{title}</h1>
+                <p>{subtitle}</p>
+            </div>
         </div>
-    </div>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
+    except Exception as e:
+        st.error(f"Could not load hero image: {str(e)}")
+        st.markdown(f"""
+        <div class="hero-container" style="background-color: #4361ee; padding: 50px; border-radius: 8px;">
+            <div class="hero-text" style="position: static; transform: none;">
+                <h1 class="hero-title" style="color: white;">{title}</h1>
+                <p style="color: white;">{subtitle}</p>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
 def activity_item(user, action, time_ago):
     """Activity feed item component"""
@@ -505,7 +517,12 @@ def login_page():
         </p>
     """, unsafe_allow_html=True)
 
-    st.image("https://images.unsplash.com/photo-1469474968028-56623f02e42e", use_container_width=True, caption="Capture the vibe with Atmosphere")
+    try:
+        st.image("https://images.unsplash.com/photo-1469474968028-56623f02e42e", use_container_width=True, caption="Capture the vibe with Atmosphere")
+    except Exception as e:
+        st.warning(f"Could not load image: {str(e)}")
+        st.markdown("### Capture the vibe with Atmosphere")
+    
     st.markdown("---")
 
     col1, col2 = st.columns([2, 1])
@@ -735,7 +752,9 @@ def home_page():
                     <div class="activity-time">
                         {event['location']['name']}
                     </div>
-                </div>
+
+
+                    </div>
                 """, unsafe_allow_html=True)
 
 def explore_page():
@@ -745,13 +764,28 @@ def explore_page():
     
     # Sheikh Zayed Road Map Section
     st.subheader("📍 Sheikh Zayed Road - Dubai's Iconic Highway")
-    st.image("Images/sheikhzayed.png", caption="Map of Sheikh Zayed Road with key landmarks")
+    
+    # Use a try/except block to handle image loading issues
+    try:
+        if os.path.exists("Images/sheikhzayed.png"):
+            st.image("Images/sheikhzayed.png", caption="Map of Sheikh Zayed Road with key landmarks")
+        else:
+            st.info("Map image not available. Sheikh Zayed Road is Dubai's main highway with numerous iconic landmarks.")
+    except Exception as e:
+        st.warning(f"Could not load image: {str(e)}")
+        st.info("Sheikh Zayed Road is Dubai's main highway with numerous iconic landmarks.")
     
     # Museum of the Future section
     st.subheader("🏛️ Museum of the Future")
     col1, col2 = st.columns([1, 2])
     with col1:
-        st.image("Images/museumoffuture.webp", caption="Museum of the Future - Dubai")
+        try:
+            if os.path.exists("Images/museumoffuture.webp"):
+                st.image("Images/museumoffuture.webp", caption="Museum of the Future - Dubai")
+            else:
+                st.info("Museum image not available.")
+        except Exception as e:
+            st.warning(f"Could not load image: {str(e)}")
     with col2:
         st.markdown("""
         <div style="padding:15px;">
@@ -769,25 +803,25 @@ def explore_page():
     circles = [
         {
             "name": "NYC Photographers",
-            "image": "Images/nycphotography.jpg",
+            "image_path": "Images/nycphotography.jpg",
             "description": "For photography enthusiasts in NYC",
             "id": "circle_1"
         },
         {
             "name": "Dubai Photography Enthusiasts", 
-            "image": "Images/photographygroup.jpg",
+            "image_path": "Images/photographygroup.jpg",
             "description": "For photography lovers in Dubai",
             "id": "circle_2"
         },
         {
             "name": "Sharjah Foodies",
-            "image": "Images/foodies.jpg",
+            "image_path": "Images/foodies.jpg",
             "description": "Discover the best food spots in Sharjah",
             "id": "circle_3"
         },
         {
             "name": "Business Network",
-            "image": "Images/businessnetworks.webp",
+            "image_path": "Images/businessnetworks.webp",
             "description": "Professional networking group",
             "id": "circle_4"
         }
@@ -797,13 +831,21 @@ def explore_page():
     cols = st.columns(2)
     for i, circle in enumerate(circles):
         with cols[i % 2]:
-            st.image(circle["image"], width=300)
+            try:
+                if os.path.exists(circle["image_path"]):
+                    st.image(circle["image_path"], width=300)
+                else:
+                    st.info(f"Image for {circle['name']} not available.")
+            except Exception as e:
+                st.warning(f"Could not load image: {str(e)}")
+            
             st.markdown(f"""
             <div class="card">
                 <h3>{circle['name']}</h3>
                 <p>{circle['description']}</p>
             </div>
             """, unsafe_allow_html=True)
+            
             if st.button("Join Circle", key=f"join_{circle['id']}"):
                 st.success(f"You joined {circle['name']}!")
                 
@@ -812,14 +854,14 @@ def explore_page():
     events = [
         {
             "name": "Burj Khalifa Sunset Photography",
-            "image": "Images/buijkhalifasunset.jpg",
+            "image_path": "Images/buijkhalifasunset.jpg",
             "date": "2023-11-15 at 18:00",
             "location": "Burj Khalifa, Dubai",
             "id": "event_1"
         },
         {
             "name": "Museum of the Future Tour", 
-            "image": "Images/buijkhalifa.avif",
+            "image_path": "Images/buijkhalifa.avif",
             "date": "2023-11-20 at 14:00",
             "location": "Museum of the Future",
             "id": "event_2"
@@ -827,7 +869,14 @@ def explore_page():
     ]
     
     for event in events:
-        st.image(event["image"], width=500)
+        try:
+            if os.path.exists(event["image_path"]):
+                st.image(event["image_path"], width=500)
+            else:
+                st.info(f"Image for {event['name']} not available.")
+        except Exception as e:
+            st.warning(f"Could not load image: {str(e)}")
+            
         st.markdown(f"""
         <div class="event-card">
             <h3>{event['name']}</h3>
@@ -835,6 +884,7 @@ def explore_page():
             <p>📍 {event['location']}</p>
         </div>
         """, unsafe_allow_html=True)
+        
         if st.button("RSVP", key=f"rsvp_{event['id']}"):
             st.success(f"RSVP confirmed for {event['name']}!")
 
@@ -862,39 +912,45 @@ def media_page():
         tags = st.multiselect("Tags", ["Nature", "Food", "Tech", "Art", "Sports", "Travel"])
         
         if st.button("Upload Media") and captured_photo:
-            # Save media
-            media_id = generate_id("med")
-            filename = f"{st.session_state['user']['user_id']}_{media_id}.jpg"
-            filepath = os.path.join(MEDIA_DIR, filename)
-            
-            image = Image.open(captured_photo)
-            image.save(filepath)
-            
-            # Add to database
-            media = load_db("media")
-            media.append({
-                "media_id": media_id,
-                "user_id": st.session_state["user"]["user_id"],
-                "file_path": filepath,
-                "location": {"name": location},
-                "timestamp": datetime.now().isoformat(),
-                "circle_id": next((c["circle_id"] for c in user_circles if c["name"] == selected_circle), None),
-                "tags": tags,
-                "reports": []
-            })
-            save_db("media", media)
-            
-            st.success("Media uploaded successfully!")
-            
-            # Check if this qualifies for any promotions
-            promotions = load_db("promotions")
-            for promo_id, promo in promotions.items():
-                if any(tag.lower() in [t.lower() for t in tags] for tag in promo.get("tags", [])):
-                    add_notification(
-                        st.session_state["user"]["user_id"], 
-                        "promotion", 
-                        f"Your photo qualifies for {promo['offer']} from {promo['business_id']}!"
-                    )
+            try:
+                # Ensure media directory exists
+                os.makedirs(MEDIA_DIR, exist_ok=True)
+                
+                # Save media
+                media_id = generate_id("med")
+                filename = f"{st.session_state['user']['user_id']}_{media_id}.jpg"
+                filepath = os.path.join(MEDIA_DIR, filename)
+                
+                image = Image.open(captured_photo)
+                image.save(filepath)
+                
+                # Add to database
+                media = load_db("media")
+                media.append({
+                    "media_id": media_id,
+                    "user_id": st.session_state["user"]["user_id"],
+                    "file_path": filepath,
+                    "location": {"name": location},
+                    "timestamp": datetime.now().isoformat(),
+                    "circle_id": next((c["circle_id"] for c in user_circles if c["name"] == selected_circle), None),
+                    "tags": tags,
+                    "reports": []
+                })
+                save_db("media", media)
+                
+                st.success("Media uploaded successfully!")
+                
+                # Check if this qualifies for any promotions
+                promotions = load_db("promotions")
+                for promo_id, promo in promotions.items():
+                    if any(tag.lower() in [t.lower() for t in tags] for tag in promo.get("tags", [])):
+                        add_notification(
+                            st.session_state["user"]["user_id"], 
+                            "promotion", 
+                            f"Your photo qualifies for {promo['offer']} from {promo['business_id']}!"
+                        )
+            except Exception as e:
+                st.error(f"Error uploading media: {str(e)}")
     
     with tab2:
         st.subheader("Your Shared Memories")
@@ -962,12 +1018,18 @@ def circles_page():
             st.info("No new circles to discover at the moment. Check back later!")
         else:
             for circle in discover_circles[:5]:
-                if card(
-                    circle["name"],
-                    f"{circle['description']}\n\nMembers: {len(circle['members'])} • Type: {circle['type'].capitalize()}",
-                    action_button="Join Circle",
-                    key=f"join_{circle['circle_id']}"
-                ):
+                # Fixed: Using markdown for properly rendered content
+                st.markdown(f"""
+                <div class="card">
+                    <div class="card-title">{circle['name']}</div>
+                    <div class="card-content">
+                        {circle['description']}
+                        <p>Members: {len(circle['members'])} • Type: {circle['type'].capitalize()}</p>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                if st.button("Join Circle", key=f"join_{circle['circle_id']}"):
                     # Add the user to the circle
                     circles = load_db("circles")
                     if st.session_state["user"]["user_id"] not in circles[circle["circle_id"]]["members"]:
@@ -1069,33 +1131,35 @@ def events_page():
         
         if not upcoming_events:
             st.info("No upcoming events at the moment. Check back later!")
-        else:
+        else:        
             for event in upcoming_events:
                 event_details = f"""
-                **📅 Date:** {event['date']} at {event['time']}  
-                **📍 Location:** {event['location']}  
-                **👥 Attendees:** {event['attendees']}/{event['capacity']}  
-                **🎫 Organizer:** {event['organizer']}  
-                
-                {event['description']}
+                <p style="color: #333333; margin: 5px 0;"><strong>📅 Date:</strong> {event['date']} at {event['time']}</p>
+                <p style="color: #333333; margin: 5px 0;"><strong>📍 Location:</strong> {event['location']}</p>
+                <p style="color: #333333; margin: 5px 0;"><strong>👥 Attendees:</strong> {event['attendees']}/{event['capacity']}</p>
+                <p style="color: #333333; margin: 5px 0;"><strong>🎫 Organizer:</strong> {event['organizer']}</p>
+                <p style="color: #333333; margin: 10px 0;">{event['description']}</p>
                 """
                 
                 col1, col2 = st.columns([3, 1])
                 with col1:
                     st.markdown(f"""
-                    <div class="card">
-                        <div class="card-title">{event['name']}</div>
-                        <div class="card-content">{event_details}</div>
+                    <div class="card" style="background-color: #f8f9fa; border: 1px solid #dee2e6;">
+                        <div class="card-title" style="color: #212529; font-weight: bold; font-size: 1.2rem; margin-bottom: 10px;">{event['name']}</div>
+                        <div class="card-content" style="color: #333333;">{event_details}</div>
                     </div>
                     """, unsafe_allow_html=True)
                 
                 with col2:
-                    if event.get('image'):
-                        st.image(event['image'], use_container_width=True)
+                    try:
+                        if event.get('image'):
+                            st.image(event['image'], use_container_width=True)
+                    except Exception as e:
+                        st.warning(f"Could not load image: {str(e)}")
                 
                 # View Details button with expanded details
                 if st.button(f"View Details for {event['name']}", key=f"details_{event['name']}"):
-                    st.markdown(event['details'], unsafe_allow_html=True)
+                    st.markdown(event['details'].replace('<p>', '<p style="color: #333333;">'), unsafe_allow_html=True)
                 
                 # RSVP button
                 if st.button("RSVP", key=f"rsvp_{event['name']}"):
@@ -1104,7 +1168,6 @@ def events_page():
                     st.rerun()
                 
                 st.markdown("---")
-    
     with tab2:
         st.subheader("Your Events")
         
@@ -1130,14 +1193,19 @@ def events_page():
             st.info("You're not attending any events yet. Explore upcoming events!")
         else:
             for event in your_events:
-                if card(
-                    event["name"],
-                    f"""📅 {event['date']} at {event['time']}
-                    🎫 Organized by: {event['organizer']}
-                    🟢 Status: {event['status']}""",
-                    action_button="View Details",
-                    key=f"details_{event['name']}"
-                ):
+                # Fixed: Using markdown for properly rendered content
+                st.markdown(f"""
+                <div class="card">
+                    <div class="card-title">{event['name']}</div>
+                    <div class="card-content">
+                        <p>📅 {event['date']} at {event['time']}</p>
+                        <p>🎫 Organized by: {event['organizer']}</p>
+                        <p>🟢 Status: {event['status']}</p>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                if st.button("View Details", key=f"details_{event['name']}_view"):
                     st.markdown(f"""
                     <div style="padding:15px; background-color:#f8f9fa; border-radius:8px; margin-top:10px;">
                         <h4>Event Details</h4>
@@ -1221,30 +1289,45 @@ def business_page():
         
         # Business info
         businesses = load_db("businesses")
-        business = next(
-            b for b in businesses.values() 
-            if b["owner_id"] == st.session_state["user"]["user_id"]
-        )
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            card(
-                "Business Profile",
-                f"""Name: {business['business_name']}
-                Category: {business['category']}
-                Status: {"✅ Verified" if business.get('verified', False) else "⚠️ Pending"}""",
-                action_button="Edit Profile"
+        try:
+            business = next(
+                b for b in businesses.values() 
+                if b["owner_id"] == st.session_state["user"]["user_id"]
             )
-        
-        with col2:
-            card(
-                "Locations",
-                "\n".join([loc["address"] for loc in business["locations"]]),
-                action_button="Add Location"
-            )
-        
-        st.subheader("Recent Activity")
-        st.info("Business activity feed would appear here")
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                st.markdown(f"""
+                <div class="card">
+                    <div class="card-title">Business Profile</div>
+                    <div class="card-content">
+                        <p>Name: {business['business_name']}</p>
+                        <p>Category: {business['category']}</p>
+                        <p>Status: {"✅ Verified" if business.get('verified', False) else "⚠️ Pending"}</p>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                if st.button("Edit Profile", key="edit_profile"):
+                    st.info("Profile editing functionality will be added soon.")
+            
+            with col2:
+                st.markdown(f"""
+                <div class="card">
+                    <div class="card-title">Locations</div>
+                    <div class="card-content">
+                        {"<br>".join([loc["address"] for loc in business["locations"]])}
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                if st.button("Add Location", key="add_location"):
+                    st.info("Location adding functionality will be added soon.")
+            
+            st.subheader("Recent Activity")
+            st.info("Business activity feed would appear here")
+        except StopIteration:
+            st.error("Business profile not found. Please contact support.")
     
     with tab2:
         st.subheader("Create Promotion")
@@ -1257,29 +1340,34 @@ def business_page():
             tags = st.multiselect("Relevant Tags", ["Food", "Drink", "Retail", "Service", "Discount", "Event"])
             
             if st.form_submit_button("Launch Promotion"):
-                promo_id = generate_id("promo")
-                promotions = load_db("promotions")
-                
-                businesses = load_db("businesses")
-                business_id = next(
-                    b["business_id"] for b in businesses.values() 
-                    if b["owner_id"] == st.session_state["user"]["user_id"]
-                )
-                
-                promotions[promo_id] = {
-                    "promo_id": promo_id,
-                    "business_id": business_id,
-                    "offer": offer,
-                    "description": description,
-                    "requirements": requirements,
-                    "start_date": start_date.strftime("%Y-%m-%d"),
-                    "end_date": end_date.strftime("%Y-%m-%d"),
-                    "tags": tags,
-                    "claimed_by": [],
-                    "created_at": datetime.now().isoformat()
-                }
-                save_db("promotions", promotions)
-                st.success("Promotion launched successfully!")
+                try:
+                    promo_id = generate_id("promo")
+                    promotions = load_db("promotions")
+                    
+                    businesses = load_db("businesses")
+                    business_id = next(
+                        b["business_id"] for b in businesses.values() 
+                        if b["owner_id"] == st.session_state["user"]["user_id"]
+                    )
+                    
+                    promotions[promo_id] = {
+                        "promo_id": promo_id,
+                        "business_id": business_id,
+                        "offer": offer,
+                        "description": description,
+                        "requirements": requirements,
+                        "start_date": start_date.strftime("%Y-%m-%d"),
+                        "end_date": end_date.strftime("%Y-%m-%d"),
+                        "tags": tags,
+                        "claimed_by": [],
+                        "created_at": datetime.now().isoformat()
+                    }
+                    save_db("promotions", promotions)
+                    st.success("Promotion launched successfully!")
+                except StopIteration:
+                    st.error("Business profile not found. Please contact support.")
+                except Exception as e:
+                    st.error(f"Error creating promotion: {str(e)}")
 
 def main():
     """Main application function"""
@@ -1299,8 +1387,12 @@ def main():
     # Sidebar navigation
     if st.session_state["logged_in"]:
         with st.sidebar:
-            st.image("https://via.placeholder.com/150x50?text=Atmosphere", use_container_width=True)
-            st.markdown(f"**Welcome, {st.session_state['user']['full_name'].split()[0]}!**")
+            try:
+                st.image("https://via.placeholder.com/150x50?text=Atmosphere", use_container_width=True)
+            except Exception as e:
+                st.markdown("# Atmosphere")
+                
+            st.markdown(f"*Welcome, {st.session_state['user']['full_name'].split()[0]}!*")
             
             # Navigation menu
             menu_options = {
@@ -1325,7 +1417,11 @@ def main():
             
             # User profile
             st.markdown("---")
-            st.image(st.session_state["user"].get("profile_pic", "https://via.placeholder.com/150"), width=60)
+            try:
+                st.image(st.session_state["user"].get("profile_pic", "https://via.placeholder.com/150"), width=60)
+            except Exception as e:
+                st.info("Profile picture not available")
+                
             st.caption(st.session_state["user"]["full_name"])
     
     # Page routing
@@ -1355,5 +1451,5 @@ def main():
         elif st.session_state["current_page"] == "Business":
             business_page()
 
-if __name__ == "__main__":
+if _name_ == "_main_":
     main()
