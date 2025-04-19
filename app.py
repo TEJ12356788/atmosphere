@@ -1018,14 +1018,12 @@ def circles_page():
             st.info("No new circles to discover at the moment. Check back later!")
         else:
             for circle in discover_circles[:5]:
-                # Fixed: Using markdown for properly rendered content
+                # Use explicit styling with contrasting colors
                 st.markdown(f"""
-                <div class="card">
-                    <div class="card-title">{circle['name']}</div>
-                    <div class="card-content">
-                        {circle['description']}
-                        <p>Members: {len(circle['members'])} • Type: {circle['type'].capitalize()}</p>
-                    </div>
+                <div style="background-color: #f8f9fa; border-radius: 12px; padding: 20px; margin-bottom: 15px; border: 1px solid #dee2e6;">
+                    <h3 style="color: #4361ee; margin-bottom: 15px;">{circle['name']}</h3>
+                    <p style="color: #333333; margin: 5px 0;">{circle['description']}</p>
+                    <p style="color: #333333; margin: 5px 0;">Members: {len(circle['members'])} • Type: {circle['type'].capitalize()}</p>
                 </div>
                 """, unsafe_allow_html=True)
                 
