@@ -1193,28 +1193,27 @@ def events_page():
             st.info("You're not attending any events yet. Explore upcoming events!")
         else:
             for event in your_events:
-                # Fixed: Using markdown for properly rendered content
                 st.markdown(f"""
-                <div class="card">
-                    <div class="card-title">{event['name']}</div>
-                    <div class="card-content">
-                        <p>📅 {event['date']} at {event['time']}</p>
-                        <p>🎫 Organized by: {event['organizer']}</p>
-                        <p>🟢 Status: {event['status']}</p>
-                    </div>
+                <div style="background-color: #f8f9fa; border-radius: 12px; padding: 20px; margin-bottom: 15px; border: 1px solid #dee2e6;">
+                    <h3 style="color: #4361ee; margin-bottom: 15px;">{event['name']}</h3>
+                    <p style="color: #333333; margin: 5px 0;"><strong>📅 Date:</strong> {event['date']} at {event['time']}</p>
+                    <p style="color: #333333; margin: 5px 0;"><strong>🎫 Organizer:</strong> {event['organizer']}</p>
+                    <p style="color: #333333; margin: 5px 0;"><strong>🟢 Status:</strong> {event['status']}</p>
                 </div>
                 """, unsafe_allow_html=True)
                 
-                if st.button("View Details", key=f"details_{event['name']}_view"):
-                    st.markdown(f"""
-                    <div style="padding:15px; background-color:#f8f9fa; border-radius:8px; margin-top:10px;">
-                        <h4>Event Details</h4>
-                        <p><strong>Name:</strong> {event['name']}</p>
-                        <p><strong>Date:</strong> {event['date']} at {event['time']}</p>
-                        <p><strong>Organizer:</strong> {event['organizer']}</p>
-                        <p><strong>Status:</strong> {event['status']}</p>
-                    </div>
-                    """, unsafe_allow_html=True)
+                col1, col2 = st.columns(2)
+                with col1:
+                    if st.button("View Details", key=f"details_{event['name']}_view"):
+                        st.markdown(f"""
+                        <div style="padding:15px; background-color:#f8f9fa; border-radius:8px; margin-top:10px;">
+                            <h4 style="color: #333333;">Event Details</h4>
+                            <p style="color: #333333;"><strong>Name:</strong> {event['name']}</p>
+                            <p style="color: #333333;"><strong>Date:</strong> {event['date']} at {event['time']}</p>
+                            <p style="color: #333333;"><strong>Organizer:</strong> {event['organizer']}</p>
+                            <p style="color: #333333;"><strong>Status:</strong> {event['status']}</p>
+                        </div>
+                        """, unsafe_allow_html=True)
     
     with tab3:
         st.subheader("Create New Event")
