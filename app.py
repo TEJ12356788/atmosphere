@@ -1392,7 +1392,7 @@ def main():
             except Exception as e:
                 st.markdown("# Atmosphere")
                 
-            st.markdown(f"*Welcome, {st.session_state['user']['full_name'].split()[0]}!*")
+            st.markdown(f"**Welcome, {st.session_state['user']['full_name'].split()[0]}!**")
             
             # Navigation menu
             menu_options = {
@@ -1451,5 +1451,5 @@ def main():
         elif st.session_state["current_page"] == "Business":
             business_page()
 
-if _name_ == "_main_":
+if __name__ == "__main__":
     main()
