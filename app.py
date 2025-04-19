@@ -840,9 +840,9 @@ def explore_page():
                 st.warning(f"Could not load image: {str(e)}")
             
             st.markdown(f"""
-            <div class="card">
-                <h3>{circle['name']}</h3>
-                <p>{circle['description']}</p>
+            <div style="background-color: #f8f9fa; border-radius: 12px; padding: 20px; margin-bottom: 15px; border: 1px solid #dee2e6;">
+                <h3 style="color: #4361ee; margin-bottom: 15px;">{circle['name']}</h3>
+                <p style="color: #333333; margin: 5px 0;">{circle['description']}</p>
             </div>
             """, unsafe_allow_html=True)
             
@@ -878,10 +878,10 @@ def explore_page():
             st.warning(f"Could not load image: {str(e)}")
             
         st.markdown(f"""
-        <div class="event-card">
-            <h3>{event['name']}</h3>
-            <p>📅 {event['date']}</p>
-            <p>📍 {event['location']}</p>
+        <div style="background-color: #f8f9fa; border-radius: 12px; padding: 20px; margin-bottom: 15px; border: 1px solid #dee2e6;">
+            <h3 style="color: #4361ee; margin-bottom: 15px;">{event['name']}</h3>
+            <p style="color: #333333; margin: 5px 0;">📅 {event['date']}</p>
+            <p style="color: #333333; margin: 5px 0;">📍 {event['location']}</p>
         </div>
         """, unsafe_allow_html=True)
         
