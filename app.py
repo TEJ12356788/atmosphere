@@ -1295,13 +1295,11 @@ def business_page():
             col1, col2 = st.columns(2)
             with col1:
                 st.markdown(f"""
-                <div class="card">
-                    <div class="card-title">Business Profile</div>
-                    <div class="card-content">
-                        <p>Name: {business['business_name']}</p>
-                        <p>Category: {business['category']}</p>
-                        <p>Status: {"✅ Verified" if business.get('verified', False) else "⚠️ Pending"}</p>
-                    </div>
+                <div style="background-color: #f8f9fa; border-radius: 12px; padding: 20px; margin-bottom: 15px; border: 1px solid #dee2e6;">
+                    <h3 style="color: #4361ee; margin-bottom: 15px;">Business Profile</h3>
+                    <p style="color: #333333; margin: 5px 0;">Name: {business['business_name']}</p>
+                    <p style="color: #333333; margin: 5px 0;">Category: {business['category']}</p>
+                    <p style="color: #333333; margin: 5px 0;">Status: {"✅ Verified" if business.get('verified', False) else "⚠️ Pending"}</p>
                 </div>
                 """, unsafe_allow_html=True)
                 
@@ -1310,9 +1308,9 @@ def business_page():
             
             with col2:
                 st.markdown(f"""
-                <div class="card">
-                    <div class="card-title">Locations</div>
-                    <div class="card-content">
+                <div style="background-color: #f8f9fa; border-radius: 12px; padding: 20px; margin-bottom: 15px; border: 1px solid #dee2e6;">
+                    <h3 style="color: #4361ee; margin-bottom: 15px;">Locations</h3>
+                    <div style="color: #333333;">
                         {"<br>".join([loc["address"] for loc in business["locations"]])}
                     </div>
                 </div>
