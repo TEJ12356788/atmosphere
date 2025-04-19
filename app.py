@@ -745,13 +745,13 @@ def explore_page():
     
     # Sheikh Zayed Road Map Section
     st.subheader("📍 Sheikh Zayed Road - Dubai's Iconic Highway")
-    st.image("images/shelkhzayed.png", caption="Map of Sheikh Zayed Road with key landmarks")
+    st.image("Images/sheikhzayed.png", caption="Map of Sheikh Zayed Road with key landmarks")
     
     # Museum of the Future section
     st.subheader("🏛️ Museum of the Future")
     col1, col2 = st.columns([1, 2])
     with col1:
-        st.image("images/museumoffuture.webp", caption="Museum of the Future - Dubai")
+        st.image("Images/museumoffuture.webp", caption="Museum of the Future - Dubai")
     with col2:
         st.markdown("""
         <div style="padding:15px;">
@@ -769,23 +769,27 @@ def explore_page():
     circles = [
         {
             "name": "NYC Photographers",
-            "image": "images/nycphotography.jpg",
-            "description": "For photography enthusiasts in NYC"
+            "image": "Images/nycphotography.jpg",
+            "description": "For photography enthusiasts in NYC",
+            "id": "circle_1"
         },
         {
             "name": "Dubai Photography Enthusiasts", 
-            "image": "images/photographygroup.jpg",
-            "description": "For photography lovers in Dubai"
+            "image": "Images/photographygroup.jpg",
+            "description": "For photography lovers in Dubai",
+            "id": "circle_2"
         },
         {
             "name": "Sharjah Foodies",
-            "image": "images/foodies.jpg",
-            "description": "Discover the best food spots in Sharjah"
+            "image": "Images/foodies.jpg",
+            "description": "Discover the best food spots in Sharjah",
+            "id": "circle_3"
         },
         {
             "name": "Business Network",
-            "image": "images/businessnetworks.webp",
-            "description": "Professional networking group"
+            "image": "Images/businessnetworks.webp",
+            "description": "Professional networking group",
+            "id": "circle_4"
         }
     ]
     
@@ -800,7 +804,7 @@ def explore_page():
                 <p>{circle['description']}</p>
             </div>
             """, unsafe_allow_html=True)
-            if st.button("Join Circle", key=f"join_{i}"):
+            if st.button("Join Circle", key=f"join_{circle['id']}"):
                 st.success(f"You joined {circle['name']}!")
                 
     # Events section
@@ -808,15 +812,17 @@ def explore_page():
     events = [
         {
             "name": "Burj Khalifa Sunset Photography",
-            "image": "images/buijkhalifasunset.jpg",
+            "image": "Images/buijkhalifasunset.jpg",
             "date": "2023-11-15 at 18:00",
-            "location": "Burj Khalifa, Dubai"
+            "location": "Burj Khalifa, Dubai",
+            "id": "event_1"
         },
         {
             "name": "Museum of the Future Tour", 
-            "image": "images/buijkhalifa.avif",
+            "image": "Images/buijkhalifa.avif",
             "date": "2023-11-20 at 14:00",
-            "location": "Museum of the Future"
+            "location": "Museum of the Future",
+            "id": "event_2"
         }
     ]
     
@@ -829,7 +835,7 @@ def explore_page():
             <p>📍 {event['location']}</p>
         </div>
         """, unsafe_allow_html=True)
-        if st.button("RSVP", key=f"rsvp_{event['name']}"):
+        if st.button("RSVP", key=f"rsvp_{event['id']}"):
             st.success(f"RSVP confirmed for {event['name']}!")
 
 def media_page():
